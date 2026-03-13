@@ -1,0 +1,14 @@
+{
+  "name": "ai-development-presentation",
+  "version": "1.0.0",
+  "description": "Präsentation: KI-Unterstützung in der Softwareentwicklung",
+  "scripts": {
+    "start": "node survey-server.js",
+    "public": "node survey-server.js --public",
+    "dev": "node survey-server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0"
+  }
+}

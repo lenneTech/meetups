@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KI-Unterstützung in der Softwareentwicklung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+<style>
+/* ═══════════════════════ CSS VARIABLES & THEME ═══════════════════════ */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-code: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-bg: rgba(99,102,241,0.08);
+  --accent2: #8b5cf6;
+  --cyan: #06b6d4;
+  --emerald: #10b981;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  --gradient-text: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --nav-height: 64px;
+  --font: 'Inter', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --bg-code: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --border: #334155;
+  --border-light: #1e293b;
+  --accent-bg: rgba(99,102,241,0.15);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.5);
+}
+/* ═══════════════════════ RESET & BASE ═══════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-height) + 20px)}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);line-height:1.7;transition:background .3s,color .3s;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+/* ═══════════════════════ TYPOGRAPHY ═══════════════════════ */
+h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:900;line-height:1.1;letter-spacing:-0.03em}
+h2{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;line-height:1.2;letter-spacing:-0.02em}
+h3{font-size:clamp(1.2rem,2vw,1.6rem);font-weight:700;line-height:1.3}
+h4{font-size:1.1rem;font-weight:600}
+.gradient-text{background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.mono{font-family:var(--mono)}
+/* ═══════════════════════ LAYOUT ═══════════════════════ */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+.section{padding:100px 0}
+.section-header{text-align:center;margin-bottom:64px}
+.section-header p{color:var(--text-secondary);font-size:1.15rem;max-width:700px;margin:16px auto 0}
+.section-label{display:inline-block;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);background:var(--accent-bg);padding:6px 16px;border-radius:100px;margin-bottom:16px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:32px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+@media(max-width:600px){.section{padding:60px 0}.container{padding:0 16px}}
+/* ═══════════════════════ PROGRESS BAR ═══════════════════════ */
+#progress{position:fixed;top:0;left:0;height:3px;background:var(--gradient);z-index:1001;transition:width .15s}
+/* ═══════════════════════ NAVIGATION ═══════════════════════ */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-height);background:color-mix(in srgb, var(--bg-primary) 85%, transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:1000;transition:background .3s,border .3s}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1400px;margin:0 auto;padding:0 24px}
+.nav-brand{font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:10px}
+.nav-brand svg{width:28px;height:28px}
+.nav-links{display:flex;gap:4px;list-style:none}
+.nav-links a{display:block;padding:8px 14px;border-radius:8px;font-size:.85rem;font-weight:500;color:var(--text-secondary);transition:all .2s;white-space:nowrap}
+.nav-links a:hover,.nav-links a.active{color:var(--accent);background:var(--accent-bg);text-decoration:none}
+.nav-right{display:flex;align-items:center;gap:12px}
+.theme-toggle{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent);background:var(--accent-bg)}
+.hamburger{display:none;width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.hamburger span{width:18px;height:2px;background:var(--text-primary);border-radius:2px;transition:.3s}
+@media(max-width:1100px){.nav-links{display:none;position:fixed;top:var(--nav-height);left:0;right:0;bottom:0;background:var(--bg-primary);flex-direction:column;padding:24px;gap:4px;overflow-y:auto}.nav-links.open{display:flex}.nav-links a{padding:14px 20px;font-size:1rem}.hamburger{display:flex}}
+/* ═══════════════════════ HERO ═══════════════════════ */
+.hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding-top:var(--nav-height)}
+.hero::before{content:'';position:absolute;top:-50%;right:-30%;width:80%;height:200%;background:radial-gradient(ellipse at center,rgba(99,102,241,.12) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-50%;left:-30%;width:80%;height:200%;background:radial-gradient(ellipse at center,rgba(6,182,212,.08) 0%,transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:1;text-align:center;max-width:900px;margin:0 auto;padding:40px 24px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--accent-bg);border:1px solid color-mix(in srgb, var(--accent) 20%, transparent);padding:8px 20px;border-radius:100px;font-size:.85rem;font-weight:600;color:var(--accent);margin-bottom:32px}
+.hero h1{margin-bottom:24px}
+.hero p{font-size:clamp(1.1rem,2vw,1.35rem);color:var(--text-secondary);max-width:650px;margin:0 auto 40px}
+.hero-stats{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;margin-top:48px}
+.hero-stat{text-align:center}
+.hero-stat .number{font-size:2.4rem;font-weight:900;background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat .label{font-size:.85rem;color:var(--text-tertiary);margin-top:4px}
+/* ═══════════════════════ CARDS ═══════════════════════ */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;transition:all .3s}
+.card:hover{box-shadow:var(--shadow-lg);border-color:color-mix(in srgb, var(--accent) 30%, var(--border))}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:20px}
+.card-icon.indigo{background:rgba(99,102,241,.12);color:#6366f1}
+.card-icon.violet{background:rgba(139,92,246,.12);color:#8b5cf6}
+.card-icon.cyan{background:rgba(6,182,212,.12);color:#06b6d4}
+.card-icon.emerald{background:rgba(16,185,129,.12);color:#10b981}
+.card-icon.amber{background:rgba(245,158,11,.12);color:#f59e0b}
+.card-icon.rose{background:rgba(244,63,94,.12);color:#f43f5e}
+.card h4{margin-bottom:8px}
+.card p{color:var(--text-secondary);font-size:.95rem}
+/* ═══════════════════════ SURVEY ═══════════════════════ */
+.survey-section{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.survey-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.survey-qr{text-align:center;padding:40px;background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border)}
+.survey-qr canvas{margin:20px auto;border-radius:12px}
+.survey-qr .url-display{font-family:var(--mono);font-size:.9rem;color:var(--text-secondary);background:var(--bg-code);padding:10px 16px;border-radius:8px;margin-top:16px;word-break:break-all}
+.survey-results h3{margin-bottom:24px}
+.result-block{margin-bottom:32px}
+.result-block h4{margin-bottom:12px;font-size:.95rem;color:var(--text-secondary)}
+.result-bar-group{display:flex;flex-direction:column;gap:8px}
+.result-bar{display:flex;align-items:center;gap:12px}
+.result-bar .label{min-width:90px;font-size:.85rem;font-weight:500;text-align:right;white-space:nowrap}
+#pizzaResults .label{min-width:130px}
+.result-bar .bar-track{flex:1;height:32px;background:var(--bg-tertiary);border-radius:8px;overflow:hidden;position:relative}
+.result-bar .bar-fill{height:100%;border-radius:8px;transition:width .6s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;padding:0 12px;min-width:fit-content}
+.result-bar .bar-fill span{font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap}
+.result-bar .count{min-width:40px;font-size:.85rem;color:var(--text-tertiary);text-align:right}
+.bg-indigo{background:linear-gradient(90deg,#6366f1,#818cf8)}
+.bg-violet{background:linear-gradient(90deg,#8b5cf6,#a78bfa)}
+.bg-cyan{background:linear-gradient(90deg,#06b6d4,#22d3ee)}
+.bg-emerald{background:linear-gradient(90deg,#10b981,#34d399)}
+.bg-amber{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.bg-rose{background:linear-gradient(90deg,#f43f5e,#fb7185)}
+.participants-badge{display:inline-flex;align-items:center;gap:8px;background:var(--accent-bg);padding:8px 16px;border-radius:100px;font-size:.9rem;font-weight:600;color:var(--accent);margin-bottom:24px}
+.participants-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--emerald);animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.scale-bars{display:flex;gap:4px;align-items:flex-end;height:120px;padding:0 4px;margin-top:24px}
+.scale-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px}
+.scale-bar .fill{width:100%;border-radius:4px 4px 0 0;transition:height .6s cubic-bezier(.22,1,.36,1);min-height:2px}
+.scale-bar .num{font-size:.75rem;font-weight:600;color:var(--text-tertiary)}
+.scale-bar .cnt{font-size:.7rem;color:var(--text-tertiary)}
+@media(max-width:900px){.survey-grid{grid-template-columns:1fr}}
+/* ═══════════════════════ VOTE MODE (Mobile Survey) ═══════════════════════ */
+.vote-mode{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg-primary)}
+.vote-card{max-width:500px;width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 32px;box-shadow:var(--shadow-xl)}
+.vote-card h2{font-size:1.5rem;margin-bottom:8px;text-align:center}
+.vote-card .subtitle{color:var(--text-secondary);text-align:center;margin-bottom:32px;font-size:.95rem}
+.vote-question{margin-bottom:28px}
+.vote-question label{display:block;font-weight:600;margin-bottom:12px;font-size:.95rem}
+.vote-options{display:flex;flex-direction:column;gap:8px}
+.vote-option{display:flex;align-items:center;gap:12px;padding:12px 16px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;font-size:.95rem}
+.vote-option:hover{border-color:var(--accent-light);background:var(--accent-bg)}
+.vote-option.selected{border-color:var(--accent);background:var(--accent-bg)}
+.vote-option input{display:none}
+.vote-option .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.vote-option.selected .radio{border-color:var(--accent);background:var(--accent)}
+.vote-option.selected .radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.scale-options{display:flex;gap:6px;flex-wrap:wrap}
+.scale-option{width:44px;height:44px;border-radius:10px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;transition:all .2s;font-size:.95rem}
+.scale-option:hover{border-color:var(--accent-light);background:var(--accent-bg)}
+.scale-option.selected{border-color:var(--accent);background:var(--accent);color:#fff}
+.vote-submit{width:100%;padding:14px;border:none;border-radius:10px;background:var(--gradient);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:12px;font-family:var(--font)}
+.vote-submit:hover{opacity:.9}
+.vote-submit:disabled{opacity:.5;cursor:not-allowed}
+.vote-success{text-align:center;padding:40px 0}
+.vote-success .check{width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,.12);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px}
+/* ═══════════════════════ TIMELINE ═══════════════════════ */
+.timeline{position:relative;padding:20px 0}
+.timeline::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--accent),var(--cyan),var(--emerald));border-radius:3px;transform:translateX(-50%)}
+.timeline-item{position:relative;display:flex;align-items:flex-start;margin-bottom:48px}
+.timeline-item:nth-child(odd){flex-direction:row-reverse}
+.timeline-content{width:calc(50% - 40px);padding:28px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);transition:all .3s}
+.timeline-content:hover{box-shadow:var(--shadow-lg);border-color:color-mix(in srgb, var(--accent) 30%, var(--border))}
+.timeline-dot{position:absolute;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--bg-primary);z-index:2;transition:all .3s}
+.timeline-item:hover .timeline-dot{transform:translateX(-50%) scale(1.3);box-shadow:0 0 0 6px var(--accent-bg)}
+.timeline-year{display:inline-block;font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--accent);background:var(--accent-bg);padding:4px 12px;border-radius:6px;margin-bottom:12px}
+.timeline-content h4{margin-bottom:8px;font-size:1.1rem}
+.timeline-content p{color:var(--text-secondary);font-size:.9rem}
+.timeline-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.timeline-tools span{font-size:.75rem;padding:3px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-secondary);font-weight:500}
+@media(max-width:900px){
+  .timeline::before{left:20px}
+  .timeline-item,.timeline-item:nth-child(odd){flex-direction:row}
+  .timeline-content{width:calc(100% - 52px);margin-left:52px}
+  .timeline-dot{left:20px}
+}
+/* ═══════════════════════ ACCELERATION CHART ═══════════════════════ */
+.accel-chart{display:flex;align-items:flex-end;gap:8px;height:280px;padding:20px 0;justify-content:center}
+.accel-bar{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;max-width:100px}
+.accel-bar .bar{width:100%;border-radius:8px 8px 0 0;transition:height .8s cubic-bezier(.22,1,.36,1);position:relative;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+.accel-bar .bar span{font-size:.7rem;font-weight:700;color:#fff;white-space:nowrap}
+.accel-bar .years{font-size:.7rem;font-weight:700;color:var(--text-primary);white-space:nowrap}
+.accel-bar .desc{font-size:.65rem;color:var(--text-tertiary);text-align:center;max-width:90px;line-height:1.3}
+/* ═══════════════════════ COMPARISON (MI vs KI) ═══════════════════════ */
+.comparison-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.comparison-table th{padding:16px 20px;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.comparison-table th:first-child{background:var(--bg-tertiary);text-align:left;width:40%}
+.comparison-table th:nth-child(2){background:rgba(99,102,241,.1);color:var(--accent);text-align:center}
+.comparison-table th:nth-child(3){background:rgba(16,185,129,.1);color:var(--emerald);text-align:center}
+.comparison-table td{padding:14px 20px;border-top:1px solid var(--border);font-size:.9rem}
+.comparison-table td:first-child{font-weight:600;background:var(--bg-secondary)}
+.comparison-table td:nth-child(2),.comparison-table td:nth-child(3){text-align:center;color:var(--text-secondary)}
+.comparison-table tr:hover td{background:var(--accent-bg)}
+/* ═══════════════════════ BENCHMARKS ═══════════════════════ */
+.benchmark-wrap{max-width:800px;margin:0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px}
+.benchmark-chart-container{position:relative;width:100%;height:350px}
+.benchmark-note{text-align:center;margin-top:16px;font-size:.85rem;color:var(--text-tertiary);font-style:italic}
+a.source-link{color:inherit;text-decoration:none;border-bottom:1px dashed var(--text-tertiary);transition:border-color .2s}
+a.source-link:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
+/* ═══════════════════════ SOURCES ═══════════════════════ */
+.sources-list{columns:2;column-gap:40px;list-style:none}
+.sources-list li{break-inside:avoid;margin-bottom:12px;padding-left:20px;position:relative;font-size:.85rem;color:var(--text-secondary);line-height:1.5}
+.sources-list li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.sources-list a{color:var(--accent);word-break:break-all}
+@media(max-width:700px){.sources-list{columns:1}}
+/* ═══════════════════════ FLOW SKIP ARROW ═══════════════════════ */
+.flow-ki-block{position:relative}
+.flow-skip-arrow{position:absolute;right:-56px;top:0;bottom:0;width:40px;pointer-events:none}
+.flow-skip-arrow .arrow-line{position:absolute;top:0;bottom:16px;right:0;width:40px;border:2px dashed var(--amber);border-left:none;border-radius:0 16px 16px 0}
+.flow-skip-arrow .arrow-head{position:absolute;bottom:0;right:0;width:0;height:0;border-top:8px solid var(--amber);border-left:6px solid transparent;border-right:6px solid transparent;transform:translateX(-14px)}
+.flow-skip-arrow .arrow-label{position:absolute;top:50%;right:-8px;transform:translateY(-50%) rotate(90deg);font-size:.7rem;font-weight:800;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;background:var(--bg-primary);padding:2px 8px}
+[data-theme="dark"] .flow-skip-arrow .arrow-label{background:var(--bg-primary)}
+.flow-ki-label{position:absolute;left:-48px;top:16px;font-size:.7rem;font-weight:800;color:var(--accent2);letter-spacing:.08em;text-transform:uppercase;writing-mode:vertical-lr;transform:rotate(180deg)}
+@media(max-width:800px){.flow-skip-arrow{right:-40px;width:28px}.flow-skip-arrow .arrow-line{width:28px}.flow-ki-label{left:-32px}}
+/* ═══════════════════════ OLD PROCESS ═══════════════════════ */
+.old-process{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:48px;opacity:.7;position:relative}
+.old-process::after{content:'';position:absolute;inset:0;border-radius:var(--radius);background:repeating-linear-gradient(135deg,transparent,transparent 10px,color-mix(in srgb, var(--text-tertiary) 5%, transparent) 10px,color-mix(in srgb, var(--text-tertiary) 5%, transparent) 11px);pointer-events:none}
+.old-process-label{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);margin-bottom:16px}
+.old-process-label .line-through{text-decoration:line-through}
+.old-flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center}
+.old-flow-step{padding:8px 14px;background:var(--bg-tertiary);border-radius:8px;font-size:.8rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.old-flow-step.highlight{background:rgba(244,63,94,.1);color:var(--rose);border:1px dashed var(--rose)}
+.old-flow-arrow{color:var(--text-tertiary);font-size:.85rem;padding:0 6px}
+.old-flow-note{text-align:center;margin-top:12px;font-size:.8rem;color:var(--text-tertiary);font-style:italic}
+/* ═══════════════════════ USE CASES ═══════════════════════ */
+.usecase-item{display:flex;align-items:flex-start;gap:16px;padding:16px 20px;border-radius:10px;transition:background .2s}
+.usecase-item:hover{background:var(--accent-bg)}
+.usecase-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem}
+.usecase-item h4{font-size:.95rem;margin-bottom:2px}
+.usecase-item p{font-size:.85rem;color:var(--text-secondary)}
+/* ═══════════════════════ FLOW DIAGRAM ═══════════════════════ */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;max-width:700px;margin:0 auto}
+.flow-step{display:flex;align-items:center;gap:16px;padding:16px 24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:100%;transition:all .3s;position:relative}
+.flow-step:hover{box-shadow:var(--shadow-md);border-color:var(--accent)}
+.flow-step .num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#fff;flex-shrink:0}
+.flow-step p{font-size:.9rem;font-weight:500}
+.flow-step .badge{font-size:.7rem;padding:2px 8px;border-radius:4px;font-weight:600;margin-left:auto;white-space:nowrap}
+.flow-arrow{width:2px;height:24px;background:var(--border);position:relative}
+.flow-arrow::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--border)}
+.flow-decision{padding:16px 24px;background:var(--accent-bg);border:2px solid var(--accent);border-radius:var(--radius);text-align:center;font-weight:700;color:var(--accent);transform:rotate(0deg);width:100%}
+.flow-stages{display:flex;gap:12px;margin-top:24px;justify-content:center;flex-wrap:wrap}
+.flow-stage{padding:8px 20px;border-radius:8px;font-size:.85rem;font-weight:600;border:2px solid}
+/* ═══════════════════════ TAKEAWAY CARDS ═══════════════════════ */
+.takeaway{display:flex;align-items:flex-start;gap:20px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);transition:all .3s;margin-bottom:16px}
+.takeaway:hover{box-shadow:var(--shadow-lg);transform:translateX(8px);border-color:var(--accent)}
+.takeaway-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;flex-shrink:0;background:var(--gradient);color:#fff}
+.takeaway h4{margin-bottom:4px}
+.takeaway p{color:var(--text-secondary);font-size:.9rem}
+/* ═══════════════════════ QUOTE ═══════════════════════ */
+.quote-block{text-align:center;padding:60px 40px;background:var(--bg-secondary);border-radius:var(--radius-lg);border:1px solid var(--border);position:relative}
+.quote-block::before{content:'\201C';position:absolute;top:20px;left:30px;font-size:6rem;color:var(--accent);opacity:.15;font-family:Georgia,serif;line-height:1}
+.quote-block blockquote{font-size:clamp(1.2rem,2.5vw,1.8rem);font-weight:700;line-height:1.4;max-width:800px;margin:0 auto}
+.quote-block cite{display:block;margin-top:20px;font-size:1rem;font-weight:400;color:var(--text-secondary);font-style:normal}
+/* ═══════════════════════ FOOTER ═══════════════════════ */
+footer{padding:40px 0;border-top:1px solid var(--border);text-align:center;color:var(--text-tertiary);font-size:.85rem}
+footer a{color:var(--accent)}
+/* ═══════════════════════ STAT HIGHLIGHT ═══════════════════════ */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat-box{text-align:center;padding:28px 20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+.stat-box .val{font-size:2.2rem;font-weight:900;background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-box .desc{font-size:.85rem;color:var(--text-secondary);margin-top:4px}
+@media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+/* ═══════════════════════ ANIMATIONS ═══════════════════════ */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-left{opacity:0;transform:translateX(-30px);transition:opacity .7s,transform .7s}
+.reveal-left.visible{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(30px);transition:opacity .7s,transform .7s}
+.reveal-right.visible{opacity:1;transform:translateX(0)}
+/* ═══════════════════════ TOOL RECOMMENDATION ═══════════════════════ */
+.tool-rec{display:flex;gap:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;align-items:center}
+.tool-rec .badge-best{background:var(--gradient);color:#fff;padding:6px 14px;border-radius:6px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:inline-block;margin-bottom:12px}
+.tool-rec p{color:var(--text-secondary);font-size:.9rem}
+.tool-rec .features{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tool-rec .features span{background:var(--bg-tertiary);padding:4px 10px;border-radius:6px;font-size:.8rem;color:var(--text-secondary)}
+@media(max-width:700px){.tool-rec{flex-direction:column}}
+/* ═══════════════════════ INFO BOX ═══════════════════════ */
+.info-box{padding:24px;border-radius:var(--radius);border-left:4px solid;margin:24px 0}
+.info-box.info{border-color:var(--accent);background:var(--accent-bg)}
+.info-box.success{border-color:var(--emerald);background:rgba(16,185,129,.08)}
+.info-box.warning{border-color:var(--amber);background:rgba(245,158,11,.08)}
+.info-box h4{margin-bottom:8px}
+.info-box p{font-size:.9rem;color:var(--text-secondary)}
+/* ═══════════════════════ PARADOX HIGHLIGHT ═══════════════════════ */
+.paradox-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px}
+.paradox-card{padding:32px;border-radius:var(--radius);text-align:center}
+.paradox-card.high{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+.paradox-card.low{background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2)}
+.paradox-card .big{font-size:3rem;font-weight:900;line-height:1}
+.paradox-card .label{font-size:1rem;font-weight:600;margin-top:8px}
+.paradox-card .sub{font-size:.85rem;color:var(--text-secondary);margin-top:4px}
+@media(max-width:600px){.paradox-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ PROGRESS BAR ═══════════════════════ -->
+<div id="progress" style="width:0%"></div>
+
+<!-- ═══════════════════════ NAVIGATION ═══════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="url(#g1)"/><path d="M8 22V10l8 6-8 6z" fill="#fff"/><path d="M16 22V10l8 6-8 6z" fill="#fff" opacity=".6"/><defs><linearGradient id="g1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs></svg>
+      KI in der Entwicklung
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#survey">Umfrage</a></li>
+      <li><a href="#evolution">Evolution</a></li>
+      <li><a href="#comparison">MI vs KI</a></li>
+      <li><a href="#today">Heute</a></li>
+      <li><a href="#future">Zukunft</a></li>
+      <li><a href="#takeaways">Mitnehmen</a></li>
+      <li><a href="#sources">Quellen</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" title="Theme umschalten">
+        <span id="themeIcon">&#9790;</span>
+      </button>
+      <button class="hamburger" id="hamburger" aria-label="Menü">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ NEWSLETTER (oben) ═══════════════════════ -->
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center">
+  <div>
+    <h2 style="margin-bottom:12px">Kein Meetup mehr verpassen!</h2>
+    <p style="color:var(--text-secondary);margin-bottom:32px;font-size:1.05rem">Melde dich bei unserem Newsletter an, um über kommende Meetups informiert zu werden!</p>
+    <div style="display:inline-block;background:#fff;padding:16px;border-radius:12px">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Flenne.tech%2Fentwickler-meetup&bgcolor=ffffff&color=000000" alt="Newsletter QR-Code" width="200" height="200" style="display:block">
+    </div>
+    <p style="margin-top:16px"><a href="https://lenne.tech/entwickler-meetup" target="_blank" style="color:var(--accent);font-weight:600;font-size:1.05rem">lenne.tech/entwickler-meetup</a></p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SÜDWESTFALEN.DIGITAL ═══════════════════════ -->
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center">
+  <div>
+    <h2 style="margin-bottom:12px">Unterstützt von</h2>
+    <a href="https://südwestfalen.digital" target="_blank" style="display:inline-block;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.15);transition:transform .2s;max-width:700px" onmouseenter="this.style.transform='scale(1.02)'" onmouseleave="this.style.transform='scale(1)'">
+      <img src="suedwestfalen-digital.png" alt="südwestfalen.digital" style="display:block;width:100%;height:auto">
+    </a>
+    <div style="display:inline-block;background:#fff;padding:16px;border-radius:12px;margin-top:24px">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fxn--sdwestfalen-djb.digital&bgcolor=ffffff&color=000000" alt="südwestfalen.digital QR-Code" width="200" height="200" style="display:block">
+    </div>
+    <p style="margin-top:16px"><a href="https://südwestfalen.digital" target="_blank" style="color:var(--accent);font-weight:600;font-size:1.1rem">südwestfalen.digital</a></p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ PIZZA SURVEY ═══════════════════════ -->
+<section class="section survey-section" id="pizza-survey">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Pizza-Bestellung</span>
+      <h2>Was gibt's heute Abend?</h2>
+      <p>Scannt den QR-Code oder öffnet den Link, um eure Pizza-Wünsche abzugeben.</p>
+    </div>
+    <div class="survey-grid">
+      <div class="survey-qr">
+        <h3>Jetzt abstimmen</h3>
+        <canvas id="pizzaQrCanvas"></canvas>
+        <div class="url-display" id="pizzaSurveyUrl">Lade...</div>
+        <p style="margin-top:16px;font-size:.85rem;color:var(--text-tertiary)">QR-Code scannen oder URL im Browser öffnen</p>
+      </div>
+      <div class="survey-results">
+        <div class="participants-badge"><span class="dot"></span> <span id="pizzaParticipantCount">0</span> Teilnehmer</div>
+        <div class="result-block">
+          <h4>Familienpizzen gesamt: <span id="pizzaTotalCount" style="color:var(--accent);font-size:1.2em">0</span></h4>
+        </div>
+        <div class="result-block">
+          <h4>Worauf habt ihr Hunger?</h4>
+          <div class="result-bar-group" id="pizzaResults">
+            <div class="result-bar"><span class="label">Margherita</span><div class="bar-track"><div class="bar-fill bg-emerald" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Salami</span><div class="bar-track"><div class="bar-fill bg-rose" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Prosciutto</span><div class="bar-track"><div class="bar-fill bg-amber" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Tonno</span><div class="bar-track"><div class="bar-fill bg-cyan" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Mista</span><div class="bar-track"><div class="bar-fill bg-indigo" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Rucola</span><div class="bar-track"><div class="bar-fill bg-emerald" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Hawaii</span><div class="bar-track"><div class="bar-fill bg-amber" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Gyros</span><div class="bar-track"><div class="bar-fill bg-violet" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Broccoli</span><div class="bar-track"><div class="bar-fill bg-cyan" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Peperoni</span><div class="bar-track"><div class="bar-fill bg-rose" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Quattro Formaggi</span><div class="bar-track"><div class="bar-fill bg-indigo" style="width:0%"><span>0</span></div></div><span class="count">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-badge">lenne.Tech &middot; Wissenstransfer 2026</div>
+    <h1>KI-Unterstützung in der <span class="gradient-text">Softwareentwicklung</span></h1>
+    <p>Wie sich die Entwicklungsunterstützung vom einfachen Texteditor zum autonomen KI-Entwickler gewandelt hat &ndash; und was das für unsere Arbeit bedeutet.</p>
+    <div class="hero-stats">
+      <a href="https://survey.stackoverflow.co/2025/ai" target="_blank" class="hero-stat source-link" style="text-decoration:none"><div class="number" data-count="84">0</div><div class="label">% nutzen KI-Tools</div></a>
+      <a href="https://www.netcorpsoftwaredevelopment.com/blog/ai-generated-code-statistics" target="_blank" class="hero-stat source-link" style="text-decoration:none"><div class="number" data-count="41">0</div><div class="label">% Code ist KI-generiert</div></a>
+      <a href="https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/" target="_blank" class="hero-stat source-link" style="text-decoration:none"><div class="number" data-count="55">0</div><div class="label">% schnellere Umsetzung</div></a>
+      <a href="https://stackoverflow.blog/2025/12/29/developers-remain-willing-but-reluctant-to-use-ai-the-2025-developer-survey-results-are-here/" target="_blank" class="hero-stat source-link" style="text-decoration:none"><div class="number" data-count="29">0</div><div class="label">% vertrauen KI-Output</div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SURVEY ═══════════════════════ -->
+<section class="section survey-section" id="survey">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Interaktiv</span>
+      <h2>Eure Einschätzung</h2>
+      <p>Scannt den QR-Code oder öffnet den Link, um an der anonymen Umfrage teilzunehmen. Die Ergebnisse erscheinen live.</p>
+    </div>
+    <div class="survey-grid">
+      <div class="survey-qr">
+        <h3>Jetzt teilnehmen</h3>
+        <canvas id="qrCanvas"></canvas>
+        <div class="url-display" id="surveyUrl">Lade...</div>
+        <p style="margin-top:16px;font-size:.85rem;color:var(--text-tertiary)">QR-Code scannen oder URL im Browser öffnen</p>
+        <div id="liveModeHint" class="info-box info" style="margin-top:20px;text-align:left">
+          <h4>Live-Modus aktivieren</h4>
+          <p><code style="font-family:var(--mono);background:var(--bg-code);padding:2px 6px;border-radius:4px">npm install && npm start</code> starten, dann erscheinen die Ergebnisse aller Teilnehmer in Echtzeit.</p>
+        </div>
+      </div>
+      <div class="survey-results">
+        <div class="participants-badge"><span class="dot"></span> <span id="participantCount">0</span> Teilnehmer</div>
+        <div class="result-block">
+          <h4>Nutzt du KI-Unterstützung in der Entwicklung?</h4>
+          <div class="result-bar-group" id="resultsQ1">
+            <div class="result-bar"><span class="label">Ja</span><div class="bar-track"><div class="bar-fill bg-indigo" style="width:0%"><span>0%</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Nein</span><div class="bar-track"><div class="bar-fill bg-violet" style="width:0%"><span>0%</span></div></div><span class="count">0</span></div>
+          </div>
+        </div>
+        <div class="result-block">
+          <h4>Wie zufrieden bist du mit der Unterstützung? <span style="font-weight:400;font-size:.85em;color:var(--text-tertiary)">(1 = schlecht, 10 = sehr gut)</span></h4>
+          <div class="scale-bars" id="resultsQ2">
+            <div class="scale-bar" data-n="1"><div class="fill bg-indigo" style="height:2px"></div><span class="num">1</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="2"><div class="fill bg-indigo" style="height:2px"></div><span class="num">2</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="3"><div class="fill bg-indigo" style="height:2px"></div><span class="num">3</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="4"><div class="fill bg-indigo" style="height:2px"></div><span class="num">4</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="5"><div class="fill bg-violet" style="height:2px"></div><span class="num">5</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="6"><div class="fill bg-violet" style="height:2px"></div><span class="num">6</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="7"><div class="fill bg-cyan" style="height:2px"></div><span class="num">7</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="8"><div class="fill bg-cyan" style="height:2px"></div><span class="num">8</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="9"><div class="fill bg-emerald" style="height:2px"></div><span class="num">9</span><span class="cnt">0</span></div>
+            <div class="scale-bar" data-n="10"><div class="fill bg-emerald" style="height:2px"></div><span class="num">10</span><span class="cnt">0</span></div>
+          </div>
+        </div>
+        <div class="result-block">
+          <h4>Wirst du KI zukünftig noch mehr einsetzen?</h4>
+          <div class="result-bar-group" id="resultsQ3">
+            <div class="result-bar"><span class="label">Gar nicht</span><div class="bar-track"><div class="bar-fill bg-rose" style="width:0%"><span>0%</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Weniger</span><div class="bar-track"><div class="bar-fill bg-amber" style="width:0%"><span>0%</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Gleich viel</span><div class="bar-track"><div class="bar-fill bg-cyan" style="width:0%"><span>0%</span></div></div><span class="count">0</span></div>
+            <div class="result-bar"><span class="label">Mehr</span><div class="bar-track"><div class="bar-fill bg-emerald" style="width:0%"><span>0%</span></div></div><span class="count">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SECTION 1: EVOLUTION ═══════════════════════ -->
+<section class="section" id="evolution">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Bereich 1</span>
+      <h2>Die Evolution der <span class="gradient-text">Entwicklungsunterstützung</span></h2>
+      <p>Von Lochkarten und Texteditoren bis zu autonomen KI-Agenten &ndash; ein Weg, der sich exponentiell beschleunigt.</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline">
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">1969 &ndash; 1983</span>
+          <h4>Die Geburt des Texteditors</h4>
+          <p>Ken Thompson schreibt <strong>ed</strong> auf einer PDP-7 &ndash; den ersten Unix-Editor. Man konnte die Datei nicht sehen, nur zeilenweise Befehle geben. 1976 fügt Bill Joy mit <strong>vi</strong> einen visuellen Modus hinzu. GNU <strong>Emacs</strong> bringt die Idee eines erweiterbaren Editors &ndash; im Grunde eine Lisp-Laufzeitumgebung mit angehängtem Editor.</p>
+          <div class="timeline-tools"><span>ed</span><span>vi</span><span>Emacs</span><span>Lochkarten</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">1983 &ndash; 1996</span>
+          <h4>Die ersten IDEs</h4>
+          <p><strong>Turbo Pascal</strong> von Borland vereint erstmals Editor, Compiler und Linker in einem Programm &ndash; für sensationelle 49,99$. Der Edit-Compile-Run-Zyklus schrumpft von Minuten auf Sekunden. <strong>IntelliSense</strong> (1996) in Visual Basic 5.0 schlägt erstmals Methodennamen und Parameter vor, während man tippt.</p>
+          <div class="timeline-tools"><span>Turbo Pascal</span><span>Visual Basic</span><span>IntelliSense</span><span>Visual Studio 97</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">2001 &ndash; 2010</span>
+          <h4>Intelligente IDEs verstehen den Code</h4>
+          <p><strong>IntelliJ IDEA</strong> und <strong>Eclipse</strong> bringen Refactoring, das alle Referenzen verfolgt, Dead-Code-Erkennung und semantische Navigation. Die IDE versteht erstmals die <em>Bedeutung</em> des Codes &ndash; nicht nur dessen Syntax. Man kann sicher umbenennen, Abhängigkeiten verfolgen und Fehler vor dem Kompilieren finden.</p>
+          <div class="timeline-tools"><span>IntelliJ IDEA</span><span>Eclipse</span><span>Visual Studio .NET</span><span>NetBeans</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">2015 &ndash; 2017</span>
+          <h4>VS Code demokratisiert alles</h4>
+          <p><strong>Visual Studio Code</strong> kombiniert die Leichtgewichtigkeit eines Editors mit IDE-Features. Das <strong>Language Server Protocol (LSP)</strong> entkoppelt Code-Intelligenz vom Editor &ndash; jeder Editor kann jetzt jede Sprache. <strong>IntelliCode</strong> (2017) nutzt erstmals Machine Learning für Vervollständigung.</p>
+          <div class="timeline-tools"><span>VS Code</span><span>LSP</span><span>IntelliCode</span><span>Sublime Text</span><span>Atom</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">2018 &ndash; 2020</span>
+          <h4>ML-basierte Code-Vervollständigung</h4>
+          <p><strong>TabNine</strong> nutzt GPT-2, um erstmals mehrzeilige Vorschläge zu generieren &ndash; trainiert auf 2 Millionen GitHub-Dateien. Es fühlt sich an wie Magie: Die KI schlägt ganze Ausdrücke vor, nicht nur Token. <strong>Kite</strong> unterstützt 500.000 Entwickler, scheitert aber an der Monetarisierung &ndash; &bdquo;10 Jahre zu früh am Markt&ldquo;.</p>
+          <div class="timeline-tools"><span>TabNine / GPT-2</span><span>Kite</span><span>GPT-3</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">Juni 2021</span>
+          <h4>GitHub Copilot &ndash; die Revolution</h4>
+          <p>Basierend auf <strong>OpenAI Codex</strong> (trainiert auf 159 GB Python-Code) generiert Copilot ganze Funktionen aus Kommentaren. Der <strong>HumanEval</strong>-Benchmark wird born: Codex erreicht 28,8% &ndash; bescheiden für heute, ein Paradigmenwechsel damals. Das Entwickeln wird vom Schreiben zum Beschreiben.</p>
+          <div class="timeline-tools"><span>GitHub Copilot</span><span>OpenAI Codex</span><span>HumanEval Benchmark</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">Nov 2022</span>
+          <h4>ChatGPT verändert alles</h4>
+          <p><a href="https://en.wikipedia.org/wiki/ChatGPT" target="_blank" class="source-link"><strong>100 Millionen Nutzer in 2 Monaten.</strong></a> Programmieren wird zur Konversation. Fehlermeldung reinkopieren, erklären lassen, iterieren. Parallel landet <strong>AlphaCode</strong> unter den besten 54% bei Competitive-Programming-Wettbewerben. Kite stellt den Betrieb ein &ndash; überrollt von der Welle.</p>
+          <div class="timeline-tools"><span>ChatGPT</span><span>AlphaCode</span><span>Copilot GA</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">2023</span>
+          <h4>GPT-4, Claude &amp; das Kontextfenster wächst</h4>
+          <p><strong>GPT-4</strong> und <strong>Claude</strong> erscheinen am selben Tag (14. März 2023). Claude 2 bringt ein 100.000-Token-Kontextfenster &ndash; ganze Dateien und kleine Projekte auf einmal verarbeiten. <strong>Cursor IDE</strong> integriert KI direkt in den Editor. <strong>Aider</strong> beweist, dass Terminal-basierte KI-Programmierung mächtig ist.</p>
+          <div class="timeline-tools"><span>GPT-4</span><span>Claude</span><span>Cursor IDE</span><span>Aider</span><span>Copilot Chat</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-year">2024</span>
+          <h4>KI-Agenten: Vom Vorschlag zur Umsetzung</h4>
+          <p><strong>Devin</strong> wird als &bdquo;erster KI-Software-Entwickler&ldquo; angekündigt. <strong>Claude Code</strong> entsteht als Nebenprojekt von Boris Cherny und wird zum Werkzeug, das Google-Ingenieure bevorzugen. Die KI schreibt nicht mehr nur Code &ndash; sie plant, implementiert, testet und iteriert. Auf <strong>HumanEval</strong> erreicht GPT o1: <a href="https://www.datacamp.com/tutorial/humaneval-benchmark-for-evaluating-llm-code-generation-capabilities" target="_blank" class="source-link"><strong>96,3%</strong></a> (vs. 28,8% bei Codex 2021).</p>
+          <div class="timeline-tools"><span>Devin</span><span>Claude Code</span><span>Claude 3.5 Sonnet</span><span>Cline</span><span>GPT o1</span></div>
+        </div>
+        <div class="timeline-dot"></div>
+      </div>
+
+      <div class="timeline-item reveal">
+        <div class="timeline-content" style="border-color:var(--accent);border-width:2px">
+          <span class="timeline-year" style="background:var(--gradient);color:#fff">2025 &ndash; 2026</span>
+          <h4>Multi-Agenten &amp; Senior-KI-Entwickler</h4>
+          <p><strong>Innerhalb von 2 Wochen</strong> (Februar 2026) launchen Grok Build (8 Agenten), Windsurf (5 parallele Agenten), Claude Code Agent Teams und Codex CLI gleichzeitig Multi-Agenten-Systeme. KI-Entwickler haben jetzt <strong>Memory</strong>, bearbeiten ganze Projekte, führen lange Sessions durch und arbeiten in Teams zusammen. Claude Opus 4.6 führt <a href="https://llm-stats.com/benchmarks/swe-bench-verified" target="_blank" class="source-link">SWE-bench mit <strong>79,2%</strong></a> an.</p>
+          <div class="timeline-tools"><span>Claude Code 2.0</span><span>Claude Opus 4.6</span><span>Agent Teams</span><span>GPT-5 Codex</span><span>Memory</span></div>
+        </div>
+        <div class="timeline-dot" style="background:var(--cyan);width:20px;height:20px"></div>
+      </div>
+
+    </div>
+
+    <!-- Acceleration Chart -->
+    <div class="reveal" style="margin-top:80px">
+      <div class="section-header">
+        <h3>Die <span class="gradient-text">Beschleunigung</span></h3>
+        <p>Jahre zwischen den großen Sprüngen &ndash; die Abstände werden immer kürzer</p>
+      </div>
+      <div class="accel-chart" id="accelChart">
+        <div class="accel-bar"><div class="bar bg-indigo" style="height:240px"><span>14 J</span></div><div class="years">1969-83</div><div class="desc">Editor &rarr; IDE</div></div>
+        <div class="accel-bar"><div class="bar bg-indigo" style="height:220px"><span>13 J</span></div><div class="years">1983-96</div><div class="desc">IDE &rarr; IntelliSense</div></div>
+        <div class="accel-bar"><div class="bar bg-violet" style="height:180px"><span>19 J</span></div><div class="years">1996-15</div><div class="desc">IntelliSense &rarr; VS Code</div></div>
+        <div class="accel-bar"><div class="bar bg-violet" style="height:60px"><span>3 J</span></div><div class="years">2015-18</div><div class="desc">VS Code &rarr; ML</div></div>
+        <div class="accel-bar"><div class="bar bg-cyan" style="height:60px"><span>3 J</span></div><div class="years">2018-21</div><div class="desc">ML &rarr; Copilot</div></div>
+        <div class="accel-bar"><div class="bar bg-cyan" style="height:24px"><span>1 J</span></div><div class="years">2021-22</div><div class="desc">Copilot &rarr; ChatGPT</div></div>
+        <div class="accel-bar"><div class="bar bg-emerald" style="height:40px"><span>2 J</span></div><div class="years">2022-24</div><div class="desc">ChatGPT &rarr; Agenten</div></div>
+        <div class="accel-bar"><div class="bar bg-emerald" style="height:24px"><span>1 J</span></div><div class="years">2024-25</div><div class="desc">Agent &rarr; Multi-Agent</div></div>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stat-grid reveal" style="margin-top:64px">
+      <div class="stat-box"><div class="val" data-count="84">0</div><div class="desc"><a href="https://survey.stackoverflow.co/2025/ai" target="_blank" class="source-link">% der Entwickler nutzen KI-Tools</a> (Stack Overflow 2025)</div></div>
+      <div class="stat-box"><div class="val" data-count="41">0</div><div class="desc"><a href="https://www.netcorpsoftwaredevelopment.com/blog/ai-generated-code-statistics" target="_blank" class="source-link">% des Codes ist KI-generiert</a> (2025)</div></div>
+      <div class="stat-box"><div class="val" data-count="55">0</div><div class="desc"><a href="https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/" target="_blank" class="source-link">% schnellere Aufgaben mit Copilot</a> (GitHub-Studie)</div></div>
+      <div class="stat-box"><div class="val" data-count="92">0</div><div class="desc"><a href="https://www.index.dev/blog/developer-productivity-statistics-with-ai-tools" target="_blank" class="source-link">% nutzen KI irgendwo im Workflow</a> (2026)</div></div>
+    </div>
+
+    <!-- The Trust Paradox -->
+    <div class="reveal" style="margin-top:64px">
+      <h3 style="text-align:center;margin-bottom:8px">Das Vertrauens-Paradoxon</h3>
+      <p style="text-align:center;color:var(--text-secondary);margin-bottom:0">Nutzung auf Allzeithoch &ndash; Vertrauen auf Allzeittief</p>
+      <div class="paradox-grid">
+        <div class="paradox-card high">
+          <div class="big" style="color:var(--emerald)" data-count="84">0%</div>
+          <div class="label">Nutzung</div>
+          <div class="sub"><a href="https://survey.stackoverflow.co/2025/ai" target="_blank" class="source-link">nutzen oder planen KI-Tools</a> (hoch von 76% in 2024)</div>
+        </div>
+        <div class="paradox-card low">
+          <div class="big" style="color:var(--rose)" data-count="29">0%</div>
+          <div class="label">Vertrauen</div>
+          <div class="sub"><a href="https://stackoverflow.blog/2025/12/29/developers-remain-willing-but-reluctant-to-use-ai-the-2025-developer-survey-results-are-here/" target="_blank" class="source-link">vertrauen KI-Output</a> (runter von 40% in 2024)</div>
+        </div>
+      </div>
+      <div class="info-box warning" style="margin-top:24px">
+        <h4><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" class="source-link">METR-Studie</a>: Die Wahrnehmungslücke</h4>
+        <p>In einer kontrollierten Studie brauchten Entwickler mit KI-Tools tatsächlich <strong>19% länger</strong> bei komplexen Real-World-Tasks &ndash; glaubten aber, <strong>20% schneller</strong> gewesen zu sein. KI hilft bei isolierten Aufgaben (30-55% schneller), aber echte Projekte sind komplexer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ VIBE CODER ═══════════════════════ -->
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:48px 24px;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;opacity:.06;font-family:var(--mono);font-size:.75rem;line-height:1.6;color:var(--accent);overflow:hidden;pointer-events:none;padding:24px;word-break:break-all" aria-hidden="true">
+    const ai = new Developer(); while(true) { ai.code(); ai.test(); ai.debug(); ai.optimize(); } // repeat forever // KI-Unterstützung // vibe coding // coden testen debuggen optimieren // Claude Code // MCP // Chrome DevTools // async function develop() { await plan(); await implement(); await review(); return deploy(); } // fullstack // typescript // nodejs // testing // automation // ci/cd // merge // review // deploy //
+  </div>
+  <div style="max-width:800px;position:relative;z-index:1">
+    <div style="font-size:4rem;margin-bottom:24px">&#129489;&#8205;&#128187;</div>
+    <p style="font-size:2.2rem;font-weight:800;line-height:1.3;margin-bottom:16px">&bdquo;Ich hätte nie gedacht, dass ich<br>so schnell zum <span class="gradient-text" style="font-size:2.4rem">Vibe-Coder</span> werde!&ldquo;</p>
+    <p style="font-size:1.1rem;color:var(--text-tertiary);margin-bottom:40px">Aber dann...</p>
+    <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:40px">
+      <span style="background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px"><span style="font-size:1.3rem">&#128187;</span> coden</span>
+      <span style="color:var(--text-tertiary);display:flex;align-items:center;font-size:1.2rem">&rarr;</span>
+      <span style="background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px"><span style="font-size:1.3rem">&#9989;</span> testen</span>
+      <span style="color:var(--text-tertiary);display:flex;align-items:center;font-size:1.2rem">&rarr;</span>
+      <span style="background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px"><span style="font-size:1.3rem">&#128270;</span> debuggen</span>
+      <span style="color:var(--text-tertiary);display:flex;align-items:center;font-size:1.2rem">&rarr;</span>
+      <span style="background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px"><span style="font-size:1.3rem">&#128640;</span> optimieren</span>
+    </div>
+    <p style="font-size:1.15rem;color:var(--text-secondary);line-height:1.7;margin-bottom:32px">Als die KI plötzlich agiert wie ein <strong style="color:var(--text-primary)">richtiger Entwickler</strong> &ndash;<br>mit eigenem Workflow, Schleife für Schleife &ndash; war ich überzeugt.</p>
+    <div style="background:var(--gradient);padding:16px 32px;border-radius:12px;display:inline-block">
+      <p style="font-size:1.3rem;font-weight:700;color:#fff;margin:0">Und mit Chrome MCP ist alles möglich!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MI vs KI COMPARISON ═══════════════════════ -->
+<section class="section" id="comparison" style="background:var(--bg-secondary)">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Kernvergleich</span>
+      <h2>Menschliche Intelligenz <span class="gradient-text">trifft</span> Künstliche Intelligenz</h2>
+      <p>Wir sind uns ähnlicher als gedacht. Das bedeutet: Dieselben Erwartungen, dieselbe Führung, dasselbe Onboarding.</p>
+    </div>
+
+    <table class="comparison-table reveal">
+      <thead>
+        <tr>
+          <th>Eigenschaft</th>
+          <th>&#129302; KI-Entwickler</th>
+          <th>&#129489;&#8205;&#128187; Menschlicher Entwickler</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Arbeitsspeicher</strong></td><td>Context Window (begrenzt, dann vergisst sie)</td><td>Kurzzeitgedächtnis (begrenzt, dann vergisst er/sie)</td></tr>
+        <tr><td><strong>Falsche Gewissheiten</strong></td><td>Halluziniert &ndash; generiert plausiblen Unsinn</td><td>Meint Dinge zu wissen &ndash; erinnert sich falsch</td></tr>
+        <tr><td><strong>Unbekanntes Terrain</strong></td><td>Kennt Eigenentwicklungen nicht</td><td>Kann auch nicht hellsehen</td></tr>
+        <tr><td><strong>Konsistenz</strong></td><td>Nicht deterministisch &ndash; jede Antwort leicht anders</td><td>Geht nicht immer gleich vor, fallen neue Dinge auf</td></tr>
+        <tr><td><strong>Analyse</strong></td><td>Kann Codebase analysieren, Patterns erkennen</td><td>Kann Codebase analysieren, Patterns erkennen</td></tr>
+        <tr><td><strong>Debugging</strong></td><td>Kann Fehler systematisch suchen &amp; beheben</td><td>Kann Fehler systematisch suchen &amp; beheben</td></tr>
+        <tr><td><strong>Systeme bedienen</strong></td><td>Startet Server, führt CLI-Commands aus</td><td>Startet Server, führt CLI-Commands aus</td></tr>
+        <tr><td><strong>Testen</strong></td><td>Schreibt &amp; führt Tests aus, interpretiert Ergebnisse</td><td>Schreibt &amp; führt Tests aus, interpretiert Ergebnisse</td></tr>
+        <tr><td><strong>Optimieren</strong></td><td>Performance, Refactoring, Code-Qualität</td><td>Performance, Refactoring, Code-Qualität</td></tr>
+        <tr><td><strong>Lernen</strong></td><td>Braucht Kontext, Regeln, Beispiele (CLAUDE.md, Plugin)</td><td>Braucht Onboarding, Doku, Erfahrung</td></tr>
+        <tr><td><strong>Supervision</strong></td><td>Reviews, klare Akzeptanzkriterien, Leitplanken</td><td>Code Reviews, Mentoring, Definition of Done</td></tr>
+      </tbody>
+    </table>
+
+    <div class="quote-block reveal" style="margin-top:48px">
+      <blockquote>Genau wie ich einen neuen Mitarbeitenden mit Wissen versorgen, befähigen und instruieren muss, so muss ich das auch mit einem KI-Mitarbeitenden tun.</blockquote>
+      <cite>Die gleichen Prinzipien guter Führung gelten für beide.</cite>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SECTION 2: TODAY ═══════════════════════ -->
+<section class="section" id="today">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Bereich 2</span>
+      <h2>Was wir heute bei <span class="gradient-text">lenne.Tech</span> nutzen</h2>
+      <p>Unser Setup, unsere Erfahrungen und warum wir auf Claude Code setzen.</p>
+    </div>
+
+    <!-- Claude Code Intro -->
+    <div class="grid-2 reveal" style="align-items:center;margin-bottom:64px">
+      <div>
+        <h3 style="margin-bottom:16px">Claude Code &ndash; unser KI-Entwickler</h3>
+        <p style="color:var(--text-secondary);margin-bottom:16px"><strong>Claude Code</strong> ist Anthropics agentisches KI-Coding-Tool. Es versteht ganze Codebases, editiert Dateien über mehrere Verzeichnisse, führt Commands aus, schreibt Tests und erstellt Pull Requests &ndash; direkt aus dem Terminal oder der IDE.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px">
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">Terminal CLI</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">VS Code Extension</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">JetBrains Plugin</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">CLAUDE.md</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">MCP-Protokoll</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">Agent Teams</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">Plugin-System</span>
+          <span style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600">Memory</span>
+        </div>
+        <p style="color:var(--text-tertiary);font-size:.85rem;margin-top:16px"><a href="https://code.claude.com/docs/en/overview" target="_blank" class="source-link">Nutzer u.a.: Spotify, Shopify, Figma, Stripe, NASA, Intercom, StubHub</a></p>
+      </div>
+      <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;font-family:var(--mono);font-size:.85rem;line-height:1.8;color:var(--text-secondary)">
+        <div style="display:flex;gap:8px;margin-bottom:16px"><span style="width:12px;height:12px;border-radius:50%;background:#f43f5e"></span><span style="width:12px;height:12px;border-radius:50%;background:#f59e0b"></span><span style="width:12px;height:12px;border-radius:50%;background:#10b981"></span></div>
+        <span style="color:var(--emerald)">$</span> claude<br>
+        <span style="color:var(--text-tertiary)"># Claude Code liest die Codebase...</span><br>
+        <span style="color:var(--accent)">Claude</span> &gt; Ich habe das Projekt analysiert.<br>
+        &nbsp;&nbsp;Es nutzt NestJS mit nest-server,<br>
+        &nbsp;&nbsp;Nuxt 4 Frontend, MongoDB.<br>
+        &nbsp;&nbsp;<span style="color:var(--emerald)">Wie kann ich helfen?</span><br><br>
+        <span style="color:var(--emerald)">$</span> /lt-dev:resolve-ticket LT-427<br>
+        <span style="color:var(--text-tertiary)"># Ticket lesen, Tests schreiben,</span><br>
+        <span style="color:var(--text-tertiary)"># implementieren, testen, committen...</span><br>
+        <span style="color:var(--accent)">Claude</span> &gt; <span style="color:var(--emerald)">Ticket LT-427 umgesetzt. &#10003;</span>
+      </div>
+    </div>
+
+    <!-- Benchmarks -->
+    <div class="reveal" style="margin-bottom:64px">
+      <h3 style="text-align:center;margin-bottom:8px">Warum Claude? Die <span class="gradient-text">Benchmarks</span></h3>
+      <p style="text-align:center;color:var(--text-secondary);margin-bottom:32px">SWE-bench Verified &ndash; der realistischste Test für echte Software-Entwicklung (500 GitHub-Issues, Docker-Isolation)</p>
+      <div class="benchmark-wrap">
+        <div class="benchmark-chart-container"><canvas id="benchmarkChart"></canvas></div>
+        <p class="benchmark-note">Die Spitzenplätze tauschen regelmäßig &ndash; aber Claude ist immer oben mit dabei. <a href="https://llm-stats.com/benchmarks/swe-bench-verified" target="_blank" class="source-link">SWE-bench Leaderboard</a> &middot; Stand: März 2026</p>
+      </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="reveal" style="margin-bottom:64px">
+      <h3 style="text-align:center;margin-bottom:32px">Wo wir Claude Code <span class="gradient-text">einsetzen</span></h3>
+      <div class="grid-2">
+        <div>
+          <div class="usecase-item"><div class="usecase-icon">&#128218;</div><div><h4>Einarbeitung &amp; Recherche</h4><p>Neue Technologien, Libraries und Architekturen verstehen und bewerten</p></div></div>
+          <div class="usecase-item"><div class="usecase-icon">&#128203;</div><div><h4>Planung &amp; Architektur</h4><p>Technologieauswahl, Systemdesign, Machbarkeitsanalysen</p></div></div>
+          <div class="usecase-item"><div class="usecase-icon">&#128196;</div><div><h4>Dokumente &amp; Tickets</h4><p>Technische Dokumentation, Ticket-Erstellung mit Akzeptanzkriterien</p></div></div>
+          <div class="usecase-item"><div class="usecase-icon">&#128187;</div><div><h4>Ticket-Umsetzung</h4><p>Komplette Feature-Implementierung von Tests bis Commit</p></div></div>
+        </div>
+        <div>
+          <div class="usecase-item"><div class="usecase-icon">&#128269;</div><div><h4>Code Reviews</h4><p>Automatische Qualitätsprüfung über 7 Dimensionen</p></div></div>
+          <div class="usecase-item"><div class="usecase-icon">&#128736;</div><div><h4>Debugging &amp; Optimierung</h4><p>Fehlersuche, Performance-Analyse, Refactoring</p></div></div>
+          <div class="usecase-item"><div class="usecase-icon">&#128230;</div><div><h4>Paket-Wartung</h4><p>Dependency-Updates, Security-Audits, Migrations</p></div></div>
+          <div class="usecase-item"><div class="usecase-icon">&#127912;</div><div><h4>Präsentationen &amp; mehr</h4><p>Ja, auch diese Präsentation wurde mit Claude Code erstellt</p></div></div>
+        </div>
+      </div>
+
+      <div class="info-box success" style="margin-top:24px">
+        <h4>Die zentrale Erkenntnis</h4>
+        <p>Claude Code kann vieles selbst umsetzen &ndash; aber es benötigt <strong>gute Anweisungen</strong>, <strong>klare Akzeptanzkriterien</strong>, <strong>Regeln und Prozesse</strong> sowie <strong>menschliche Reviews</strong>. Genau wie ein neuer Kollege.</p>
+      </div>
+    </div>
+
+    <!-- What we do for it -->
+    <div class="reveal" style="margin-bottom:64px">
+      <h3 style="text-align:center;margin-bottom:32px">Was wir <span class="gradient-text">dafür tun</span></h3>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon indigo">&#128230;</div>
+          <h4>Pakete &amp; Templates</h4>
+          <p>Ein guter Rahmen mit vielen fertigen Hilfsfunktionen und passenden Beispielen. Die KI lernt aus den Templates, wie unser Code aussehen soll.</p>
+          <p style="margin-top:12px"><a href="https://github.com/lenneTech" target="_blank" style="font-size:.85rem">github.com/lenneTech</a></p>
+        </div>
+        <div class="card">
+          <div class="card-icon violet">&#9000;</div>
+          <h4>lt CLI</h4>
+          <p>Unser CLI-Tool scaffoldet Projekte, generiert Module und standardisiert Workflows. Spart Token und gibt der KI klare Strukturen.</p>
+          <p style="margin-top:12px"><a href="https://github.com/lenneTech/cli" target="_blank" style="font-size:.85rem">github.com/lenneTech/cli</a></p>
+        </div>
+        <div class="card">
+          <div class="card-icon cyan">&#129520;</div>
+          <h4>Claude Code Plugin</h4>
+          <p>10 Skills, 5 Agenten, 32 Commands, 9 Hooks und 2 MCP-Server &ndash; unser gesammeltes Wissen, Regeln und Prozesse als Plugin.</p>
+          <p style="margin-top:12px"><a href="https://github.com/lenneTech/claude-code" target="_blank" style="font-size:.85rem">github.com/lenneTech/claude-code</a></p>
+        </div>
+      </div>
+
+      <div class="grid-2 reveal" style="margin-top:24px">
+        <div class="card">
+          <div class="card-icon emerald">&#9989;</div>
+          <h4>Test Driven Development (TDD)</h4>
+          <p>Akzeptanzkriterien aus den Tickets werden als Tests formuliert &ndash; <em>bevor</em> die Implementierung beginnt. So garantieren wir, dass die KI das liefert, was gefordert ist. Tests sind die härtesten Leitplanken.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon amber">&#128260;</div>
+          <h4>Angepasster Entwicklungsprozess</h4>
+          <p>Früher: Review vor jedem Commit in dev. Heute: Entwicklung ist so schnell, dass menschliche Reviews der Engpass sind. Deshalb: Reviews müssen erst vor dem Merge in den <strong>Test-Branch</strong> abgeschlossen sein.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entwicklungszyklus -->
+    <div class="reveal" style="margin-bottom:32px">
+      <h3 style="text-align:center;margin-bottom:32px">Unser <span class="gradient-text">Entwicklungszyklus</span></h3>
+
+      <!-- Alter Prozess -->
+      <div class="old-process reveal">
+        <div class="old-process-label"><span>&#128683;</span> Bisheriger Prozess <span class="line-through">&nbsp;(veraltet)&nbsp;</span></div>
+        <div class="old-flow">
+          <div class="old-flow-step">1 Ticket</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">2 Umsetzen</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">3 Lint &amp; Test</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step highlight">4 Review vor Merge</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">5 Merge in dev</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">dev</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">test</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">preview</div>
+          <div class="old-flow-arrow">&rarr;</div>
+          <div class="old-flow-step">productive</div>
+        </div>
+        <p class="old-flow-note">Problem: Menschliche Reviews waren der Engpass &ndash; jeder Commit musste <strong>vor</strong> dem Merge in dev reviewed werden, was zu langen Wartezeiten führte.</p>
+      </div>
+
+      <p style="text-align:center;font-weight:700;color:var(--accent);margin-bottom:32px;font-size:1.1rem">&#11015; Neuer Prozess</p>
+      <div class="flow">
+        <div class="flow-step"><div class="num" style="background:var(--accent)">1</div><p>Ticket erstellen</p><span class="badge" style="background:var(--accent-bg);color:var(--accent)">/create-ticket</span></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-decision" style="border-style:dashed;background:rgba(245,158,11,.08);border-color:var(--amber);color:var(--amber)">MI vs. KI &ndash; Wer übernimmt? <span class="badge" style="background:rgba(245,158,11,.15);color:var(--amber);margin-left:8px">Zukunft</span></div>
+        <div class="flow-ki-block">
+          <div class="flow-ki-label">MI-Pfad</div>
+          <div class="flow-skip-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+            <div class="arrow-label">KI-Pfad</div>
+          </div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step"><div class="num" style="background:var(--accent2)">2</div><p>Branch erstellen &amp; Ticket umsetzen</p><span class="badge" style="background:rgba(139,92,246,.1);color:var(--accent2)">/resolve-ticket</span></div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step"><div class="num" style="background:var(--cyan)">3</div><p>Umsetzung reviewen &amp; optimieren</p><span class="badge" style="background:rgba(6,182,212,.1);color:var(--cyan)">/review</span></div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step"><div class="num" style="background:var(--cyan)">4</div><p>Linten, Testen, Builden</p><span class="badge" style="background:rgba(6,182,212,.1);color:var(--cyan)">pnpm run check</span></div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step"><div class="num" style="background:var(--emerald)">5</div><p>MergeRequest für dev erstellen</p><span class="badge" style="background:rgba(16,185,129,.1);color:var(--emerald)">/dev-submit</span></div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step" style="border-color:var(--amber);border-style:dashed"><div class="num" style="background:var(--amber)">6</div><p>Automatische Prüfung durch andere KI</p><span class="badge" style="background:rgba(245,158,11,.1);color:var(--amber)">Zukunft</span></div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step"><div class="num" style="background:var(--emerald)">7</div><p>Letzter Check &amp; Merge in dev</p><span class="badge" style="background:rgba(16,185,129,.1);color:var(--emerald)">/review /security</span></div>
+        </div>
+        <div class="flow-arrow"></div>
+        <!-- Merge in dev Indikator -->
+        <div class="flow-stages" style="margin-bottom:0">
+          <span class="flow-stage" style="border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,.06)">Merge in dev</span>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><div class="num" style="background:var(--emerald)">8</div><p>Review durch anderen Entwickler</p><span class="badge" style="background:rgba(16,185,129,.1);color:var(--emerald)">Quellcode sichten</span></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-stages">
+          <span class="flow-stage" style="border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.06)">test</span>
+          <span style="align-self:center;color:var(--text-tertiary)">&rarr;</span>
+          <span class="flow-stage" style="border-color:var(--accent2);color:var(--accent2);background:rgba(139,92,246,.06)">preview</span>
+          <span style="align-self:center;color:var(--text-tertiary)">&rarr;</span>
+          <span class="flow-stage" style="border-color:var(--emerald);color:var(--emerald);background:rgba(16,185,129,.06)">productive</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════ SECTION 3: FUTURE ═══════════════════════ -->
+<section class="section" id="future" style="background:var(--bg-secondary)">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Bereich 3</span>
+      <h2>Was wir <span class="gradient-text">zukünftig</span> nutzen wollen</h2>
+      <p>Die Entwicklung rast. Diese drei Bereiche stehen als nächstes auf unserer Roadmap.</p>
+    </div>
+
+    <div class="grid-3 reveal">
+      <div class="card" style="border-top:3px solid var(--accent)">
+        <div class="card-icon indigo">&#129302;</div>
+        <h4>KI-Ticket-Zuweisung</h4>
+        <p>Einfache, klar definierte Tickets sollen <strong>direkt an die KI</strong> gehen &ndash; ohne menschlichen Zwischenschritt. Eine zweite, unabhängige KI prüft die Umsetzung automatisch, bevor ein Mensch den finalen Review macht.</p>
+        <p style="margin-top:12px;font-size:.85rem;color:var(--text-tertiary)">Im Entwicklungszyklus bereits als gestrichelter Schritt angedeutet.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent2)">
+        <div class="card-icon violet">&#128230;</div>
+        <h4>Pakete in Templates integrieren</h4>
+        <p>KI-Agenten haben Probleme mit selbstgestrickten, neuen oder wenig verbreiteten Paketen. Wenn der Code <strong>direkt im Template</strong> liegt statt in einem separaten npm-Paket, hat die KI direkteren Zugriff und versteht ihn besser.</p>
+        <p style="margin-top:12px;font-size:.85rem;color:var(--text-tertiary)">nest-server &rarr; nest-server-starter, nuxt-extensions &rarr; nuxt-base-starter</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--cyan)">
+        <div class="card-icon cyan">&#129504;</div>
+        <h4>Memory &amp; Langzeitgedächtnis</h4>
+        <p>Wir testen Memory-Plugins und Claude Codes eigenes Auto-Memory. Die KI soll <strong>projektübergreifend lernen</strong>: Architektur-Entscheidungen, häufige Patterns, vergangene Fehler &ndash; wie ein Teamkollege, der Erfahrung sammelt.</p>
+        <p style="margin-top:12px;font-size:.85rem;color:var(--text-tertiary)">Alles entwickelt sich so schnell, dass auch Claude Code bereits eigenes Memory bietet.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SECTION 4: TAKEAWAYS ═══════════════════════ -->
+<section class="section" id="takeaways">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Bereich 4</span>
+      <h2>Was ich euch <span class="gradient-text">mitgeben</span> möchte</h2>
+      <p>Neun Dinge, die den Unterschied machen.</p>
+    </div>
+
+    <div style="max-width:800px;margin:0 auto">
+      <div class="takeaway reveal"><div class="takeaway-num">1</div><div><h4>Rasende Geschwindigkeit</h4><p>Der Eindruck von gestern kann sich heute wandeln. Was vor Monaten war, ist Steinzeit. Dranbleiben ist Pflicht, nicht Kür.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">2</div><div><h4>Gutes Briefing: Vernünftige Tickets</h4><p>Klare Beschreibungen, präzise Anforderungen, Kontext. Was für neue Kolleg:innen gilt, gilt auch für die KI.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">3</div><div><h4>Harte Leitplanken: Akzeptanzkriterien &rarr; TDD</h4><p>Tests sind die härtesten Leitplanken. Sie garantieren, dass geliefert wird, was gefordert ist &ndash; unabhängig davon, wer implementiert.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">4</div><div><h4>Zusätzliches Wissen: Plugin &amp; CLAUDE.md</h4><p>Regeln, Patterns, Best Practices &ndash; alles, was nicht im öffentlichen Trainingsset steht, muss aktiv bereitgestellt werden.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">5</div><div><h4>Abstand nehmen: /clear</h4><p>Genau wie wir manchmal einen frischen Blick brauchen, hilft es der KI, mit einem sauberen Kontext neu zu starten.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">6</div><div><h4>Wiederholte Reviews</h4><p>Auch uns fallen bei mehrfachem Draufschauen unterschiedliche Dinge auf. Mehrere Review-Runden sind kein Zeichen von Schwäche.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">7</div><div><h4>Human in the Loop</h4><p>Entscheidungen und finale Reviews bleiben beim Menschen. Die KI ist der starke Assistent, nicht der Entscheider.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">8</div><div><h4>Prozesse anpassen</h4><p>Neue Möglichkeiten erfordern neue Prozesse. Wer mit KI-Speed entwickelt, braucht angepasste Review- und Deployment-Workflows.</p></div></div>
+      <div class="takeaway reveal"><div class="takeaway-num">9</div><div><h4>Erkenntnisse teilen</h4><p>Erfahrungen austauschen und sammeln &ndash; sie fließen in Prozesse und Plugin zurück. Gemeinsam werden wir besser.</p></div></div>
+    </div>
+
+    <!-- Closing -->
+    <div class="quote-block reveal" style="margin-top:64px;background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(6,182,212,.06));border:2px solid color-mix(in srgb, var(--accent) 20%, var(--border))">
+      <blockquote>Das ist alles nichts Neues. Denn alles, was für eine effiziente KI-Unterstützung gilt, gilt eigentlich schon immer für gute Software&shy;entwicklung.</blockquote>
+      <cite>Gute Tickets, klare Kriterien, saubere Prozesse, Reviews, Wissenstransfer &ndash; das waren schon immer die Grundlagen.</cite>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SOURCES ═══════════════════════ -->
+<section class="section" id="sources" style="background:var(--bg-secondary)">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Quellenverzeichnis</span>
+      <h2>Quellen &amp; <span class="gradient-text">Referenzen</span></h2>
+    </div>
+    <ul class="sources-list">
+      <li><strong>Stack Overflow Developer Survey 2025 &ndash; AI Section</strong><br><a href="https://survey.stackoverflow.co/2025/ai" target="_blank">survey.stackoverflow.co/2025/ai</a></li>
+      <li><strong>Stack Overflow Blog: 2025 Survey Results</strong><br><a href="https://stackoverflow.blog/2025/12/29/developers-remain-willing-but-reluctant-to-use-ai-the-2025-developer-survey-results-are-here/" target="_blank">stackoverflow.blog &ndash; 2025 Survey</a></li>
+      <li><strong>JetBrains State of Developer Ecosystem 2025 &ndash; AI</strong><br><a href="https://devecosystem-2025.jetbrains.com/artificial-intelligence" target="_blank">devecosystem-2025.jetbrains.com</a></li>
+      <li><strong>GitHub Copilot: 20M+ Nutzer (TechCrunch)</strong><br><a href="https://techcrunch.com/2025/07/30/github-copilot-crosses-20-million-all-time-users/" target="_blank">techcrunch.com &ndash; Copilot 20M Users</a></li>
+      <li><strong>GitHub Blog: Copilot Productivity Research</strong><br><a href="https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/" target="_blank">github.blog &ndash; Copilot Productivity</a></li>
+      <li><strong>McKinsey: Developer Productivity mit Generative AI</strong><br><a href="https://www.mckinsey.com/capabilities/tech-and-ai/our-insights/unleashing-developer-productivity-with-generative-ai" target="_blank">mckinsey.com &ndash; Developer Productivity</a></li>
+      <li><strong>METR-Studie: KI-Impact auf erfahrene Entwickler</strong><br><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank">metr.org &ndash; AI Developer Study</a></li>
+      <li><strong>SWE-bench Verified Leaderboard</strong><br><a href="https://llm-stats.com/benchmarks/swe-bench-verified" target="_blank">llm-stats.com/benchmarks/swe-bench-verified</a></li>
+      <li><strong>Anthropic: Claude Code Overview</strong><br><a href="https://code.claude.com/docs/en/overview" target="_blank">code.claude.com/docs</a></li>
+      <li><strong>Anthropic: Claude Opus 4.5 Announcement</strong><br><a href="https://www.anthropic.com/news/claude-opus-4-5" target="_blank">anthropic.com &ndash; Opus 4.5</a></li>
+      <li><strong>Anthropic: SWE-bench Sonnet Performance</strong><br><a href="https://www.anthropic.com/research/swe-bench-sonnet" target="_blank">anthropic.com/research/swe-bench-sonnet</a></li>
+      <li><strong>Claude Sonnet 4.6: Benchmarks (NxCode)</strong><br><a href="https://www.nxcode.io/resources/news/claude-sonnet-4-6-complete-guide-benchmarks-pricing-2026" target="_blank">nxcode.io &ndash; Sonnet 4.6</a></li>
+      <li><strong>CB Insights: Coding AI Market Share 2025</strong><br><a href="https://www.cbinsights.com/research/report/coding-ai-market-share-2025/" target="_blank">cbinsights.com &ndash; Coding AI Market</a></li>
+      <li><strong>Cursor: $2B+ ARR (TechCrunch)</strong><br><a href="https://techcrunch.com/2026/03/02/cursor-has-reportedly-surpassed-2b-in-annualized-revenue/" target="_blank">techcrunch.com &ndash; Cursor Revenue</a></li>
+      <li><strong>Index.dev: Developer Productivity Statistics 2026</strong><br><a href="https://www.index.dev/blog/developer-productivity-statistics-with-ai-tools" target="_blank">index.dev &ndash; Productivity Statistics</a></li>
+      <li><strong>Netcorp: AI-Generated Code Statistics 2026</strong><br><a href="https://www.netcorpsoftwaredevelopment.com/blog/ai-generated-code-statistics" target="_blank">netcorp &ndash; AI Code Statistics</a></li>
+      <li><strong>MIT Technology Review: Generative Coding 2026 Breakthrough</strong><br><a href="https://www.technologyreview.com/2026/01/12/1130027/generative-coding-ai-software-2026-breakthrough-technology/" target="_blank">technologyreview.com &ndash; Generative Coding</a></li>
+      <li><strong>Tom's Hardware: Microsoft CEO &ndash; 30% AI Code</strong><br><a href="https://www.tomshardware.com/tech-industry/artificial-intelligence/microsofts-ceo-reveals-that-ai-writes-up-to-30-percent-of-its-code" target="_blank">tomshardware.com &ndash; Microsoft AI Code</a></li>
+      <li><strong>GitHub Blog: GPT-5.3-Codex für Copilot</strong><br><a href="https://github.blog/changelog/2026-02-09-gpt-5-3-codex-is-now-generally-available-for-github-copilot/" target="_blank">github.blog &ndash; GPT-5.3 Codex</a></li>
+      <li><strong>GitHub Blog: Claude &amp; Codex in Copilot</strong><br><a href="https://github.blog/changelog/2026-02-26-claude-and-codex-now-available-for-copilot-business-pro-users/" target="_blank">github.blog &ndash; Claude in Copilot</a></li>
+      <li><strong>OpenAI Codex &ndash; Wikipedia</strong><br><a href="https://en.wikipedia.org/wiki/OpenAI_Codex" target="_blank">Wikipedia &ndash; OpenAI Codex</a></li>
+      <li><strong>GitHub Copilot &ndash; Wikipedia</strong><br><a href="https://en.wikipedia.org/wiki/GitHub_Copilot" target="_blank">Wikipedia &ndash; GitHub Copilot</a></li>
+      <li><strong>lenne.Tech: CLI</strong><br><a href="https://github.com/lenneTech/cli" target="_blank">github.com/lenneTech/cli</a></li>
+      <li><strong>lenne.Tech: Claude Code Plugin</strong><br><a href="https://github.com/lenneTech/claude-code" target="_blank">github.com/lenneTech/claude-code</a></li>
+      <li><strong>Cloudflare Tunnel (cloudflared)</strong> &ndash; Sicherer, verschlüsselter Tunnel für netzunabhängigen Umfrage-Zugriff (kein Account nötig)<br><a href="https://github.com/cloudflare/cloudflared" target="_blank">github.com/cloudflare/cloudflared</a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════ NEWSLETTER ═══════════════════════ -->
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center">
+  <div>
+    <h2 style="margin-bottom:12px">Kein Meetup mehr verpassen!</h2>
+    <p style="color:var(--text-secondary);margin-bottom:32px;font-size:1.05rem">Wenn du zukünftig kein Meetup mehr verpassen willst, melde dich bei unserem Newsletter an!</p>
+    <div style="display:inline-block;background:#fff;padding:16px;border-radius:12px">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Flenne.tech%2Fentwickler-meetup&bgcolor=ffffff&color=000000" alt="Newsletter QR-Code" width="200" height="200" style="display:block">
+    </div>
+    <p style="margin-top:16px"><a href="https://lenne.tech/entwickler-meetup" target="_blank" style="color:var(--accent);font-weight:600;font-size:1.05rem">lenne.tech/entwickler-meetup</a></p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+<footer>
+  <div class="container">
+    <p><strong>lenne.Tech GmbH</strong> &middot; <a href="https://lenne.tech" target="_blank">lenne.tech</a> &middot; Erstellt mit Claude Code (Opus 4.6) &middot; März 2026</p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════ VOTE MODE (Mobile Survey) ═══════════════════════ -->
+<div class="vote-mode" id="voteMode" style="display:none">
+  <div class="vote-card">
+    <h2 class="gradient-text">Deine Einschätzung</h2>
+    <p class="subtitle">KI-Unterstützung in der Softwareentwicklung</p>
+
+    <div id="voteForm">
+      <div class="vote-question">
+        <label>1. Nutzt du KI-Unterstützung in der Entwicklung?</label>
+        <div class="vote-options" data-q="q1">
+          <div class="vote-option" data-v="ja" onclick="selectOption(this)"><input type="radio" name="q1" value="ja"><div class="radio"></div>Ja</div>
+          <div class="vote-option" data-v="nein" onclick="selectOption(this)"><input type="radio" name="q1" value="nein"><div class="radio"></div>Nein</div>
+        </div>
+      </div>
+
+      <div class="vote-question">
+        <label>2. Wie zufrieden bist du mit der Unterstützung? (1 = schlecht, 10 = sehr gut)</label>
+        <div class="scale-options" data-q="q2">
+          <div class="scale-option" data-v="1" onclick="selectScale(this)">1</div>
+          <div class="scale-option" data-v="2" onclick="selectScale(this)">2</div>
+          <div class="scale-option" data-v="3" onclick="selectScale(this)">3</div>
+          <div class="scale-option" data-v="4" onclick="selectScale(this)">4</div>
+          <div class="scale-option" data-v="5" onclick="selectScale(this)">5</div>
+          <div class="scale-option" data-v="6" onclick="selectScale(this)">6</div>
+          <div class="scale-option" data-v="7" onclick="selectScale(this)">7</div>
+          <div class="scale-option" data-v="8" onclick="selectScale(this)">8</div>
+          <div class="scale-option" data-v="9" onclick="selectScale(this)">9</div>
+          <div class="scale-option" data-v="10" onclick="selectScale(this)">10</div>
+        </div>
+      </div>
+
+      <div class="vote-question">
+        <label>3. Wirst du KI zukünftig noch mehr einsetzen?</label>
+        <div class="vote-options" data-q="q3">
+          <div class="vote-option" data-v="gar-nicht" onclick="selectOption(this)"><input type="radio" name="q3" value="gar-nicht"><div class="radio"></div>Gar nicht</div>
+          <div class="vote-option" data-v="weniger" onclick="selectOption(this)"><input type="radio" name="q3" value="weniger"><div class="radio"></div>Weniger</div>
+          <div class="vote-option" data-v="gleich-viel" onclick="selectOption(this)"><input type="radio" name="q3" value="gleich-viel"><div class="radio"></div>Gleich viel</div>
+          <div class="vote-option" data-v="mehr" onclick="selectOption(this)"><input type="radio" name="q3" value="mehr"><div class="radio"></div>Mehr</div>
+        </div>
+      </div>
+
+      <button class="vote-submit" id="voteSubmit" onclick="submitVote()" disabled>Abstimmen</button>
+    </div>
+
+    <div class="vote-success" id="voteSuccess" style="display:none">
+      <div class="check">&#10003;</div>
+      <h3>Danke für deine Teilnahme!</h3>
+      <p style="color:var(--text-secondary);margin-top:8px">Die Ergebnisse werden live in der Präsentation angezeigt.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PIZZA VOTE MODE (Mobile) ═══════════════════════ -->
+<div class="vote-mode" id="pizzaVoteMode" style="display:none">
+  <div class="vote-card">
+    <h2 class="gradient-text">Pizza-Bestellung</h2>
+    <p class="subtitle">Was gibt's heute Abend?</p>
+
+    <div id="pizzaVoteForm">
+      <div class="vote-question">
+        <label>1. Wieviele Familienpizzen brauchen wir?</label>
+        <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-top:12px">
+          <button type="button" onclick="adjustPizzaCount(-1)" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-size:1.4rem;cursor:pointer">-</button>
+          <input type="number" id="pizzaCountInput" min="0" max="50" value="1" style="width:60px;text-align:center;font-size:1.3rem;font-weight:700;border:2px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-primary);padding:8px">
+          <button type="button" onclick="adjustPizzaCount(1)" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-size:1.4rem;cursor:pointer">+</button>
+        </div>
+      </div>
+
+      <div class="vote-question">
+        <label>2. Worauf hast du Hunger? (Mehrfachauswahl)</label>
+        <div class="vote-options" data-q="pizza" style="flex-direction:column">
+          <div class="vote-option pizza-option" data-v="margherita" onclick="togglePizza(this)"><div class="radio"></div>Margherita</div>
+          <div class="vote-option pizza-option" data-v="salami" onclick="togglePizza(this)"><div class="radio"></div>Salami</div>
+          <div class="vote-option pizza-option" data-v="prosciutto" onclick="togglePizza(this)"><div class="radio"></div>Prosciutto</div>
+          <div class="vote-option pizza-option" data-v="tonno" onclick="togglePizza(this)"><div class="radio"></div>Tonno</div>
+          <div class="vote-option pizza-option" data-v="mista" onclick="togglePizza(this)"><div class="radio"></div>Mista</div>
+          <div class="vote-option pizza-option" data-v="rucola" onclick="togglePizza(this)"><div class="radio"></div>Rucola</div>
+          <div class="vote-option pizza-option" data-v="hawaii" onclick="togglePizza(this)"><div class="radio"></div>Hawaii</div>
+          <div class="vote-option pizza-option" data-v="gyros" onclick="togglePizza(this)"><div class="radio"></div>Gyros</div>
+          <div class="vote-option pizza-option" data-v="broccoli" onclick="togglePizza(this)"><div class="radio"></div>Broccoli</div>
+          <div class="vote-option pizza-option" data-v="peperoni" onclick="togglePizza(this)"><div class="radio"></div>Peperoni</div>
+          <div class="vote-option pizza-option" data-v="quattro-formaggi" onclick="togglePizza(this)"><div class="radio"></div>Quattro Formaggi</div>
+        </div>
+      </div>
+
+      <button class="vote-submit" id="pizzaVoteSubmit" onclick="submitPizzaVote()" disabled>Bestellen</button>
+    </div>
+
+    <div class="vote-success" id="pizzaVoteSuccess" style="display:none">
+      <div class="check">&#10003;</div>
+      <h3>Danke für deine Bestellung!</h3>
+      <p style="color:var(--text-secondary);margin-top:8px">Die Ergebnisse werden live in der Präsentation angezeigt.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+<script>
+// ── Detect Vote Mode ──
+const params = new URLSearchParams(window.location.search);
+const isVoteMode = params.has('vote');
+const isPizzaMode = params.has('pizza');
+if (isVoteMode || isPizzaMode) {
+  document.querySelector('nav').style.display = 'none';
+  document.getElementById('progress').style.display = 'none';
+  document.querySelectorAll('section, .hero, footer').forEach(el => el.style.display = 'none');
+  if (isPizzaMode) {
+    document.getElementById('pizzaVoteMode').style.display = '';
+  } else {
+    document.getElementById('voteMode').style.display = '';
+  }
+}
+
+// ── Theme Toggle ──
+const html = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) { html.dataset.theme = savedTheme; }
+else if (window.matchMedia('(prefers-color-scheme: dark)').matches) { html.dataset.theme = 'dark'; }
+function updateIcon() { themeIcon.textContent = html.dataset.theme === 'dark' ? '\u2600' : '\u263E'; }
+updateIcon();
+themeToggle.addEventListener('click', () => {
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', html.dataset.theme);
+  updateIcon();
+  if (window.benchChart) updateChartTheme();
+});
+
+// ── Hamburger ──
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('navLinks');
+hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+// ── Progress Bar ──
+window.addEventListener('scroll', () => {
+  const winScroll = document.documentElement.scrollTop;
+  const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  document.getElementById('progress').style.width = (winScroll / height * 100) + '%';
+});
+
+// ── Active Nav ──
+const sections = document.querySelectorAll('section[id], .hero[id]');
+const navAs = document.querySelectorAll('.nav-links a');
+const observer1 = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navAs.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-80px 0px -50% 0px' });
+sections.forEach(s => observer1.observe(s));
+
+// ── Scroll Reveal ──
+const observer2 = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) { entry.target.classList.add('visible'); }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el => observer2.observe(el));
+
+// ── Counter Animation ──
+function animateCounter(el) {
+  const target = parseInt(el.dataset.count);
+  const duration = 1500;
+  const start = performance.now();
+  const isPercent = el.textContent.includes('%') || el.closest('.paradox-card');
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(target * ease);
+    el.textContent = current + (isPercent ? '%' : '');
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const counterObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !entry.target._counted) {
+      entry.target._counted = true;
+      animateCounter(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+
+// ── Benchmark Chart ──
+let benchChart;
+function getChartColors() {
+  const isDark = html.dataset.theme === 'dark';
+  return {
+    text: isDark ? '#e2e8f0' : '#334155',
+    grid: isDark ? '#334155' : '#e2e8f0',
+    bg: isDark ? '#1e293b' : '#ffffff'
+  };
+}
+function createBenchmarkChart() {
+  const ctx = document.getElementById('benchmarkChart');
+  if (!ctx) return;
+  const c = getChartColors();
+  benchChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Claude Opus 4.6\n(Thinking)', 'Claude Sonnet 4.6', 'GPT-5.4', 'Gemini 3 Flash', 'Claude Opus 4.5', 'Claude Sonnet 4.5', 'GPT-5.2 Codex'],
+      datasets: [{
+        label: 'SWE-bench Verified (%)',
+        data: [79.2, 79.6, 77.2, 76.2, 76.8, 77.2, 72.5],
+        backgroundColor: ['#6366f1', '#818cf8', '#64748b', '#64748b', '#a5b4fc', '#c4b5fd', '#64748b'],
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.parsed.x + '%' } }
+      },
+      scales: {
+        x: { min: 65, max: 85, ticks: { color: c.text, callback: v => v + '%' }, grid: { color: c.grid } },
+        y: { ticks: { color: c.text, font: { size: 12, weight: '500' } }, grid: { display: false } }
+      }
+    }
+  });
+}
+function updateChartTheme() {
+  if (!benchChart) return;
+  const c = getChartColors();
+  benchChart.options.scales.x.ticks.color = c.text;
+  benchChart.options.scales.x.grid.color = c.grid;
+  benchChart.options.scales.y.ticks.color = c.text;
+  benchChart.update();
+}
+createBenchmarkChart();
+
+// ── Reset Survey ──
+function resetSurvey() {
+  if (!confirm('Umfrage wirklich zurücksetzen?')) return;
+  fetch('/api/reset', { method: 'POST' }).catch(() => {
+    localStorage.removeItem('survey-results');
+    location.reload();
+  });
+}
+
+// ── QR Code (simple SVG-based generator, no external lib needed) ──
+function generateQR(text, canvas) {
+  // Simple QR placeholder using an external API for reliability
+  const size = 220;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => { ctx.drawImage(img, 0, 0, size, size); };
+  img.onerror = () => {
+    // Fallback: show URL text
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#333';
+    ctx.font = '14px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR-Code', size/2, size/2 - 10);
+    ctx.fillText('Server starten für', size/2, size/2 + 10);
+    ctx.fillText('Live-QR-Code', size/2, size/2 + 30);
+  };
+  // Use a free QR API
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000`;
+}
+
+// ── Survey / Socket.IO Connection ──
+let socket = null;
+const surveyState = { q1: null, q2: null, q3: null };
+
+function connectSocket() {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  try {
+    socket = io(window.location.origin, { transports: ['websocket', 'polling'], reconnection: true, timeout: 3000 });
+    socket.on('connect', () => {
+      console.log('Live-Modus: Verbunden');
+      const hint = document.getElementById('liveModeHint');
+      if (hint) hint.style.display = 'none';
+      // Hole die echte IP vom Server für QR-Code
+      fetch('/api/info').then(r => r.json()).then(info => {
+        document.getElementById('surveyUrl').textContent = info.voteUrl;
+        generateQR(info.voteUrl, document.getElementById('qrCanvas'));
+        // Pizza QR-Code
+        const pizzaUrl = info.pizzaUrl || info.voteUrl.replace('?vote', '?pizza');
+        document.getElementById('pizzaSurveyUrl').textContent = pizzaUrl;
+        generateQR(pizzaUrl, document.getElementById('pizzaQrCanvas'));
+      }).catch(() => {
+        document.getElementById('surveyUrl').textContent = window.location.origin + '?vote';
+        generateQR(window.location.origin + '?vote', document.getElementById('qrCanvas'));
+        const pizzaUrl = window.location.origin + '?pizza';
+        document.getElementById('pizzaSurveyUrl').textContent = pizzaUrl;
+        generateQR(pizzaUrl, document.getElementById('pizzaQrCanvas'));
+      });
+    });
+    socket.on('results', updateResults);
+    socket.on('pizza-results', updatePizzaResults);
+    socket.on('vote-accepted', () => {
+      document.getElementById('voteForm').style.display = 'none';
+      document.getElementById('voteSuccess').style.display = '';
+    });
+    socket.on('already-voted', () => {
+      document.getElementById('voteForm').style.display = 'none';
+      document.getElementById('voteSuccess').style.display = '';
+    });
+    socket.on('pizza-vote-accepted', () => {
+      document.getElementById('pizzaVoteForm').style.display = 'none';
+      document.getElementById('pizzaVoteSuccess').style.display = '';
+    });
+    socket.on('pizza-already-voted', () => {
+      document.getElementById('pizzaVoteForm').style.display = 'none';
+      document.getElementById('pizzaVoteSuccess').style.display = '';
+    });
+    socket.on('connect_error', () => {
+      console.log('Kein Server gefunden – Demo-Modus');
+      socket.disconnect();
+      socket = null;
+      initDemoMode();
+    });
+  } catch (e) {
+    initDemoMode();
+  }
+}
+
+function initDemoMode() {
+  const url = window.location.origin + window.location.pathname + '?vote';
+  document.getElementById('surveyUrl').textContent = url + ' (Demo-Modus)';
+  generateQR(url, document.getElementById('qrCanvas'));
+  const pizzaUrl = window.location.origin + window.location.pathname + '?pizza';
+  document.getElementById('pizzaSurveyUrl').textContent = pizzaUrl + ' (Demo-Modus)';
+  generateQR(pizzaUrl, document.getElementById('pizzaQrCanvas'));
+
+  // Load demo data from localStorage
+  const stored = localStorage.getItem('survey-results');
+  if (stored) updateResults(JSON.parse(stored));
+}
+
+function updateResults(data) {
+  if (!data || !data.votes) return;
+  const { votes, totalVoters } = data;
+  document.getElementById('participantCount').textContent = totalVoters || 0;
+
+  // Q1
+  const q1Total = (votes.q1.ja || 0) + (votes.q1.nein || 0);
+  const q1Bars = document.querySelectorAll('#resultsQ1 .result-bar');
+  if (q1Bars[0]) {
+    const pct = q1Total ? Math.round(votes.q1.ja / q1Total * 100) : 0;
+    q1Bars[0].querySelector('.bar-fill').style.width = pct + '%';
+    q1Bars[0].querySelector('.bar-fill span').textContent = pct + '%';
+    q1Bars[0].querySelector('.count').textContent = votes.q1.ja || 0;
+  }
+  if (q1Bars[1]) {
+    const pct = q1Total ? Math.round(votes.q1.nein / q1Total * 100) : 0;
+    q1Bars[1].querySelector('.bar-fill').style.width = pct + '%';
+    q1Bars[1].querySelector('.bar-fill span').textContent = pct + '%';
+    q1Bars[1].querySelector('.count').textContent = votes.q1.nein || 0;
+  }
+
+  // Q2
+  const q2Bars = document.querySelectorAll('#resultsQ2 .scale-bar');
+  let q2Max = 0;
+  for (let i = 1; i <= 10; i++) q2Max = Math.max(q2Max, votes.q2[i] || 0);
+  q2Bars.forEach(bar => {
+    const n = bar.dataset.n;
+    const count = votes.q2[n] || 0;
+    const height = q2Max ? Math.max(2, (count / q2Max) * 100) : 2;
+    bar.querySelector('.fill').style.height = height + 'px';
+    bar.querySelector('.cnt').textContent = count;
+  });
+
+  // Q3
+  const q3Keys = ['gar-nicht', 'weniger', 'gleich-viel', 'mehr'];
+  const q3Total = q3Keys.reduce((sum, k) => sum + (votes.q3[k] || 0), 0);
+  const q3Bars = document.querySelectorAll('#resultsQ3 .result-bar');
+  q3Keys.forEach((key, i) => {
+    if (q3Bars[i]) {
+      const pct = q3Total ? Math.round(votes.q3[key] / q3Total * 100) : 0;
+      q3Bars[i].querySelector('.bar-fill').style.width = pct + '%';
+      q3Bars[i].querySelector('.bar-fill span').textContent = pct + '%';
+      q3Bars[i].querySelector('.count').textContent = votes.q3[key] || 0;
+    }
+  });
+}
+
+// ── Vote UI Functions ──
+function selectOption(el) {
+  const parent = el.closest('.vote-options');
+  parent.querySelectorAll('.vote-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  surveyState[parent.dataset.q] = el.dataset.v;
+  checkSubmit();
+}
+function selectScale(el) {
+  const parent = el.closest('.scale-options');
+  parent.querySelectorAll('.scale-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  surveyState[parent.dataset.q] = parseInt(el.dataset.v);
+  checkSubmit();
+}
+function checkSubmit() {
+  document.getElementById('voteSubmit').disabled = !(surveyState.q1 && surveyState.q2 && surveyState.q3);
+}
+function submitVote() {
+  const voterId = localStorage.getItem('voter-id') || (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+  localStorage.setItem('voter-id', voterId);
+
+  if (socket && socket.connected) {
+    socket.emit('vote', { voterId, ...surveyState });
+  } else {
+    // Demo mode: store locally
+    const stored = JSON.parse(localStorage.getItem('survey-results') || '{"votes":{"q1":{"ja":0,"nein":0},"q2":{"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"9":0,"10":0},"q3":{"gar-nicht":0,"weniger":0,"gleich-viel":0,"mehr":0}},"totalVoters":0}');
+    stored.totalVoters++;
+    if (surveyState.q1) stored.votes.q1[surveyState.q1]++;
+    if (surveyState.q2) stored.votes.q2[surveyState.q2]++;
+    if (surveyState.q3) stored.votes.q3[surveyState.q3]++;
+    localStorage.setItem('survey-results', JSON.stringify(stored));
+    updateResults(stored);
+    document.getElementById('voteForm').style.display = 'none';
+    document.getElementById('voteSuccess').style.display = '';
+  }
+}
+
+// ── Pizza Survey Functions ──
+const pizzaSorten = ['margherita','salami','prosciutto','tonno','mista','rucola','hawaii','gyros','broccoli','peperoni','quattro-formaggi'];
+const selectedPizzas = new Set();
+
+const pizzaLabels = { 'margherita':'Margherita','salami':'Salami','prosciutto':'Prosciutto','tonno':'Tonno','mista':'Mista','rucola':'Rucola','hawaii':'Hawaii','gyros':'Gyros','broccoli':'Broccoli','peperoni':'Peperoni','quattro-formaggi':'Quattro Formaggi' };
+const pizzaColors = { 'margherita':'bg-emerald','salami':'bg-rose','prosciutto':'bg-amber','tonno':'bg-cyan','mista':'bg-indigo','rucola':'bg-emerald','hawaii':'bg-amber','gyros':'bg-violet','broccoli':'bg-cyan','peperoni':'bg-rose','quattro-formaggi':'bg-indigo' };
+
+function updatePizzaResults(data) {
+  if (!data || !data.pizzaVotes) return;
+  const { pizzaVotes, pizzaVoters } = data;
+  const el = document.getElementById('pizzaParticipantCount');
+  if (el) el.textContent = pizzaVoters;
+  const totalEl = document.getElementById('pizzaTotalCount');
+  if (totalEl) totalEl.textContent = pizzaVotes.anzahl;
+
+  // Sort by votes descending
+  const sorted = [...pizzaSorten].sort((a, b) => (pizzaVotes.sorten[b] || 0) - (pizzaVotes.sorten[a] || 0));
+  const maxVal = Math.max(1, ...Object.values(pizzaVotes.sorten));
+  const container = document.getElementById('pizzaResults');
+  container.innerHTML = sorted.map(key => {
+    const val = pizzaVotes.sorten[key] || 0;
+    const pct = Math.round((val / maxVal) * 100);
+    return `<div class="result-bar"><span class="label">${pizzaLabels[key]}</span><div class="bar-track"><div class="bar-fill ${pizzaColors[key]}" style="width:${pct}%"><span>${val}</span></div></div><span class="count">${val}</span></div>`;
+  }).join('');
+}
+
+function togglePizza(el) {
+  const v = el.dataset.v;
+  if (selectedPizzas.has(v)) { selectedPizzas.delete(v); el.classList.remove('selected'); }
+  else { selectedPizzas.add(v); el.classList.add('selected'); }
+  checkPizzaSubmit();
+}
+
+function adjustPizzaCount(delta) {
+  const input = document.getElementById('pizzaCountInput');
+  input.value = Math.max(0, Math.min(50, Number(input.value) + delta));
+  checkPizzaSubmit();
+}
+
+function checkPizzaSubmit() {
+  const count = Number(document.getElementById('pizzaCountInput').value);
+  document.getElementById('pizzaVoteSubmit').disabled = !(count > 0 && selectedPizzas.size > 0);
+}
+
+function submitPizzaVote() {
+  const voterId = localStorage.getItem('pizza-voter-id') || (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+  localStorage.setItem('pizza-voter-id', voterId);
+  const data = { voterId, anzahl: Number(document.getElementById('pizzaCountInput').value), sorten: Array.from(selectedPizzas) };
+  if (socket && socket.connected) {
+    socket.emit('pizza-vote', data);
+  } else {
+    document.getElementById('pizzaVoteForm').style.display = 'none';
+    document.getElementById('pizzaVoteSuccess').style.display = '';
+  }
+}
+
+function resetPizzaSurvey() {
+  if (!confirm('Pizza-Umfrage wirklich zurücksetzen?')) return;
+  fetch('/api/pizza/reset', { method: 'POST' }).catch(() => { location.reload(); });
+}
+
+// ── QR-Code Doppelklick zum Zurücksetzen ──
+document.getElementById('qrCanvas')?.addEventListener('dblclick', resetSurvey);
+document.getElementById('pizzaQrCanvas')?.addEventListener('dblclick', resetPizzaSurvey);
+
+// ── Init ──
+if (!isVoteMode && !isPizzaMode) {
+  connectSocket();
+} else {
+  // Vote/Pizza mode also needs socket for live submission
+  try {
+    socket = io(window.location.origin, { transports: ['websocket', 'polling'], reconnection: true, timeout: 3000 });
+    socket.on('pizza-vote-accepted', () => {
+      document.getElementById('pizzaVoteForm').style.display = 'none';
+      document.getElementById('pizzaVoteSuccess').style.display = '';
+    });
+    socket.on('pizza-already-voted', () => {
+      document.getElementById('pizzaVoteForm').style.display = 'none';
+      document.getElementById('pizzaVoteSuccess').style.display = '';
+    });
+    socket.on('vote-accepted', () => {
+      document.getElementById('voteForm').style.display = 'none';
+      document.getElementById('voteSuccess').style.display = '';
+    });
+    socket.on('already-voted', () => {
+      document.getElementById('voteForm').style.display = 'none';
+      document.getElementById('voteSuccess').style.display = '';
+    });
+    socket.on('connect_error', () => { socket.disconnect(); socket = null; });
+  } catch (e) { socket = null; }
+}
+
+// ── Keyboard Navigation (arrow keys for sections) ──
+const allSections = Array.from(document.querySelectorAll('section[id], .hero'));
+let currentSection = 0;
+document.addEventListener('keydown', e => {
+  if (isVoteMode || isPizzaMode) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    currentSection = Math.min(currentSection + 1, allSections.length - 1);
+    allSections[currentSection].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    currentSection = Math.max(currentSection - 1, 0);
+    allSections[currentSection].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+</body>
+</html>

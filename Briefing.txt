@@ -1,0 +1,104 @@
+Baue mir eine responsive HTML-Seite, die modern mit Dark- & Lightmode-Option gestaltet ist und die ich nutzen kann, um über das Thema "KI-Unterstützung in der Softwareentwicklung" zu referieren. Toll wäre es wenn ich noch ein Menü hätte mit dem ich schnell zu ein einzelnen Sektionen springen kann.
+
+Gibt es ein OpenSource (Typescript & Nodejs) Umfragetool, was ich einbauen könnte und die Teilnehmer ganz am Anfang noch folgende Fragen stellen kann:
+
+Nutzt du KI-Unterstützung in der Entwicklung?
+- ja
+- nein
+
+Wie zufrieden bist du mit der Unterstützung?
+1 bis 10 wobei 10 sehr gut
+
+Wirst du es zukünftig noch mehr einsetzen?
+- gar nicht
+- weniger
+- gleich viel
+- mehr
+
+und die Teilnehmer via QR-Code teilnehmen können (wie bei Mentimeter)?
+
+Inhalt:
+
+Die Präsentation ist in vier große inhaltliche Bereiche untergliedert werden:
+1. Was uns früher zur Verfügung stand
+2. Was wir heute bei lenne.Tech nutzen
+3. Was wir zukünftig nutzen wollen
+4. Was ich euch mitgeben möchte
+
+Bei Bereich 1 soll historisch der Weg der immer besser werdenden Unterstützung nachgezeichnet werden am liebsten mit Bilder, Screenshots und Illustrationen. Grobe Orientierung für die Schritte:
+1. Einfacher Texteditor
+2. Einfache IDE mit besseren Hilfsfunktionen (z.B. mehrere Zeilen gleich editieren, Codevergleiche etc.)
+3. Starke IDE mit Unterstützung für Sprachen und Libraries (Verlinkungen zu Funktionen, Autovervollständigung für Funktionsnamen)
+4. Rudimentäre KI: Vorschlag für Rest der Zeile bzw. kleiner Blöcke (eher statistische Wahrscheinlichkeit)
+5. Quellcode-Verständnis (Vorschlag für ganze Funktionen und Dateien)
+6. Entwickler Verständnis (Ansätze für komplette Umsetzungen, in mehreren Dateien)
+7. Vollständiger KI-Entwickler (Schleife: Aufgabe verstehen, Coden, Testen, Loggen, Debuggen, Optimieren), mit viel Allgemeinwissen über Programmierung aber durch kleines Kontext-Fenster senil
+8. Vollständiger Senior-KI-Entwickler mit größerem Kontextwindow, Memory-Funktionen und noch besserem Codeverständnis, der sogar lange Sessions absolvieren kann.
+Bitte recherchiere ausführlich und baue eine eigene Einteilung, die oberen Schritte dienen lediglich als grobes Beispiel. Ziel ist es aufzuzeigen wie sich alles Entwickelt hat und wie rasend schnell es in letzter Zeit geht
+
+Dann soll ein Vergleich zwischen menschlichem Entwickler (menschliche Intelligenz - MI) und künstlichem Entwickler (künstlicher Intelligenz - KI) geben, die in etwa folgende Punkte enthält:
+
+KI hat die ähnliche Stärken und Schwächen wie MI:
+- Context Window <> (Kurzzeit) Gedächtnis
+- Halluzinationen <> Meint Dinge zu wissen
+- Kennt bestimmte Dinge nicht (Eigenentwicklugnen) <> kann auch nicht Hellsehen
+- Nicht deterministisch <> Gehen auch nicht immer exakt gleich vor, uns fallen immer wieder neue Dinge auf
+- Kann analysieren <> Kann analysieren
+- Kann debuggen <> Kann debuggen
+- Kann Systeme starten <> Kann Systeme starten
+- Kann testen <> Kann testen
+- Kann optimieren <> Kann optimieren
+Optimiere das bitte und stelle es anschaulich dar. Ziel ist es zu zeigen, dass wir uns sehr ähnlich sind und daher auch die Erwartungshaltungen dementsprechen gesetzt werden müssen. Genau wie ich andere Mitarbeitende mit Wissen versorgen, befähigen und instruieren muss, so muss ich das auch mit einem KI-Mitarbeitenden tun.
+
+Bereich 2 soll folgende Inhalte aufweisen:
+1. Wir nutzen Claude Code, Wer ist das, wie nutzt man ihn und was kann er alles
+2. Was hat uns überzeugt: Kompetenz, Integration in IDE und Tooling
+3. Aspekt der Coding-Skills (Vergleich mit anderen Anbietern, Darstellung Benchmarks mit der Aussage: ja, die ersten Plätze tauschen immer mal wieder, aber Claude Code ist immer oben mit dabei)
+4. In welchen Bereichen wir ihn nutzen:
+   - Einarbeiteitung von Themen und Technologien
+	- Recherchen
+   - Planung von Technologieeinstatz und Architektur
+   - Erstellung von Dokumenten
+	- Erstellung von Tickets
+   - Umsetzung von Tickets
+   - Review Prozessen
+	- Dokumentation
+	- Erstellung von Präsentationen
+	- ...
+Aussage: Claude Code kann uns in vielem unterstützen und vieles sogar selbst umsetzen, aber es benötigt immer noch gute Anweisungen, klare Hinweise, Regeln und Prozesse, sowie menschliche Reviews
+5. Was wir dafür tun:
+	- Wissen, Regeln und Prozesse via
+		- Pakete und Templates (https://github.com/lenneTech, guter Rahmen mit vielen fertigen Hilfsfunktionen und passenden Beispielen)
+		- lt CLI (https://github.com/lenneTech/cli, dadurch sparen wir auch Token)
+		- Plugin (https://github.com/lenneTech/claude-code/tree/main/plugins/lt-dev in https://github.com/lenneTech/claude-code)
+	- TDD (Test driven Development: Akzeptanzkriterien in den Tickets werden durch Tests garantiert)
+   - Anpassung unseres Entwicklungsprozesses (siehe /Users/kaihaase/Documents/Entwicklungszyklus.drawio bzw. /Users/kaihaase/Documents/Entwicklungszyklus.drawio.svg): Früher wurde alles vor den Commit in dev von einem anderen Entwickler gereviewed, heute ist aber die Entwicklung so schnell und menschliche Reviews ein deutlich stärkerer Engpass, sodass wir Wartezeiten vermeiden, indem erst vor dem Merge in den Test Branch alle Reviews abgeschlossen sein müssen.
+
+Bereich 3:
+- Bereits in Users/kaihaase/Documents/Entwicklungszyklus.drawio bzw. /Users/kaihaase/Documents/Entwicklungszyklus.drawio.svg angedeutet möchten wir zukünftig einfache Tickets direkt an die KI abgeben und auch automatische Prüfungen direkt durch (eine andere) KI durchführen lassen.
+- Überlegung Pakete direkt in Templates aufgehen zu lassen, da KI-Agents Probleme mit selbstgestrickten, neuen oder wenig verbreiteten Paketen haben und so ein direkter Zugriff und damit auch direktere Wahrnehmung durch die KI möglich ist
+- Wir testen gerade Memory-Plugins, aber es entwickelt sich so schnell alles weiter, dass jetzt auch Claude Code bereits ein eigenes Memory bietet
+
+
+Bereich 4:
+Was man mitnehmen sollte:
+- Die KIs und die Entwicklungsunterstützung wird rasend schnell, den Eindruck den ihr gestern hattet kann sich heute schon wieder wandeln, und was vor Monaten war ist Steinzeit
+- Gutes Briefing: Vernünftige Tickets
+- Harte Planken: Akzeptanzkriterien => TDD
+- Zusätzliches Wissen und Regeln: Plugin
+- Öfter mal Abstand nehmen und mit einem klaren Kopf die Dinge betrachten: /clear
+- Wiederholte Reviews (auch uns fallen bei mehrfachen draufschauen unterschiedliche Dinge auf)
+- Human in the Loop für Entscheidungen und Reviews
+- Prozesse auf neue Möglichkeiten abstimmen
+- Dranbleiben und ausprobieren
+- Erkenntnisse austauschen und sammeln => Prozesse & Plugin
+
+Abschluss:
+
+Das ist aber eigentlich alles nichts neues, denn:
+Alles was für eine effiziente KI-Unterstützung gilt, gilt eigentlich schon immer für gute Entwicklung.
+
+
+====
+
+Bitte nimm das obige als Vorschlag und zur groben Orientierung. Führe ausführliche Recherchen im Netz durch. Formuliere neu, so dass es informativ und spannend ist. Setze das ganze in ein Ansprechendes Layout, mit dem ich die Rezipienten begeistern kann und baue passend Bilder, Grafiken, Screenshots, Videos, Vergleichstabellen, Statisiken und andere Medien ein, wenn passend und sinnvoll.
