@@ -126,8 +126,15 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav-height);background:colo
 /* ═══════════════════════ SURVEY ═══════════════════════ */
 .survey-section{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .survey-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
-.survey-qr{text-align:center;padding:40px;background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border)}
+.survey-qr{text-align:center;padding:40px;background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);position:relative}
 .survey-qr canvas{margin:20px auto;border-radius:12px}
+.survey-offline-overlay{position:relative;display:inline-block}
+.survey-offline-overlay .offline-badge{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(244,63,94,.12);border-radius:12px;z-index:2;pointer-events:none}
+.survey-offline-overlay .offline-badge .stop-icon{font-size:3rem;line-height:1}
+.survey-offline-overlay .offline-badge .stop-text{font-size:.85rem;font-weight:700;color:var(--rose);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+.survey-offline-overlay canvas{opacity:.15;filter:grayscale(1)}
+.survey-offline-hint{margin-top:16px;padding:12px 20px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;color:var(--rose);font-weight:600;font-size:.9rem}
+.survey-offline-hint code{font-family:var(--mono);background:var(--bg-code);padding:2px 6px;border-radius:4px;font-weight:400;color:var(--text-primary)}
 .survey-qr .url-display{font-family:var(--mono);font-size:.9rem;color:var(--text-secondary);background:var(--bg-code);padding:10px 16px;border-radius:8px;margin-top:16px;word-break:break-all}
 .survey-results h3{margin-bottom:24px}
 .result-block{margin-bottom:32px}
@@ -398,9 +405,13 @@ footer a{color:var(--accent)}
     <div class="survey-grid">
       <div class="survey-qr">
         <h3>Jetzt abstimmen</h3>
-        <canvas id="pizzaQrCanvas"></canvas>
+        <div class="survey-offline-overlay" id="pizzaOfflineOverlay">
+          <div class="offline-badge"><span class="stop-icon">&#128721;</span><span class="stop-text">Offline</span></div>
+          <canvas id="pizzaQrCanvas"></canvas>
+        </div>
         <div class="url-display" id="pizzaSurveyUrl">Lade...</div>
         <p style="margin-top:16px;font-size:.85rem;color:var(--text-tertiary)">QR-Code scannen oder URL im Browser öffnen</p>
+        <div class="survey-offline-hint" id="pizzaOfflineHint">Server nicht gestartet &ndash; Umfrage nicht verf&uuml;gbar.<br>Starte mit <code>npm start</code> im Meetup-Ordner.</div>
       </div>
       <div class="survey-results">
         <div class="participants-badge"><span class="dot"></span> <span id="pizzaParticipantCount">0</span> Teilnehmer</div>
@@ -454,13 +465,13 @@ footer a{color:var(--accent)}
     <div class="survey-grid">
       <div class="survey-qr">
         <h3>Jetzt teilnehmen</h3>
-        <canvas id="qrCanvas"></canvas>
+        <div class="survey-offline-overlay" id="surveyOfflineOverlay">
+          <div class="offline-badge"><span class="stop-icon">&#128721;</span><span class="stop-text">Offline</span></div>
+          <canvas id="qrCanvas"></canvas>
+        </div>
         <div class="url-display" id="surveyUrl">Lade...</div>
         <p style="margin-top:16px;font-size:.85rem;color:var(--text-tertiary)">QR-Code scannen oder URL im Browser öffnen</p>
-        <div id="liveModeHint" class="info-box info" style="margin-top:20px;text-align:left">
-          <h4>Live-Modus aktivieren</h4>
-          <p><code style="font-family:var(--mono);background:var(--bg-code);padding:2px 6px;border-radius:4px">npm install && npm start</code> starten, dann erscheinen die Ergebnisse aller Teilnehmer in Echtzeit.</p>
-        </div>
+        <div class="survey-offline-hint" id="surveyOfflineHint">Server nicht gestartet &ndash; Umfrage nicht verf&uuml;gbar.<br>Starte mit <code>npm start</code> im Meetup-Ordner.</div>
       </div>
       <div class="survey-results">
         <div class="participants-badge"><span class="dot"></span> <span id="participantCount">0</span> Teilnehmer</div>
@@ -1427,8 +1438,13 @@ function connectSocket() {
     socket = io(window.location.origin, { transports: ['websocket', 'polling'], reconnection: true, timeout: 3000 });
     socket.on('connect', () => {
       console.log('Live-Modus: Verbunden');
-      const hint = document.getElementById('liveModeHint');
-      if (hint) hint.style.display = 'none';
+      // Offline-Overlays und Hints ausblenden
+      document.querySelectorAll('.survey-offline-overlay').forEach(el => {
+        el.querySelector('.offline-badge').style.display = 'none';
+        el.querySelector('canvas').style.opacity = '1';
+        el.querySelector('canvas').style.filter = 'none';
+      });
+      document.querySelectorAll('.survey-offline-hint').forEach(el => el.style.display = 'none');
       // Hole die echte IP vom Server für QR-Code
       fetch('/api/info').then(r => r.json()).then(info => {
         document.getElementById('surveyUrl').textContent = info.voteUrl;
