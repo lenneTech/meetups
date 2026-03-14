@@ -180,24 +180,36 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav-height);background:colo
 .vote-success{text-align:center;padding:40px 0}
 .vote-success .check{width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,.12);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px}
 /* ═══════════════════════ TIMELINE ═══════════════════════ */
-.timeline{position:relative;padding:20px 0}
-.timeline::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--accent),var(--cyan),var(--emerald));border-radius:3px;transform:translateX(-50%)}
-.timeline-item{position:relative;display:flex;align-items:flex-start;margin-bottom:48px}
-.timeline-item:nth-child(odd){flex-direction:row-reverse}
-.timeline-content{width:calc(50% - 40px);padding:28px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);transition:all .3s}
-.timeline-content:hover{box-shadow:var(--shadow-lg);border-color:color-mix(in srgb, var(--accent) 30%, var(--border))}
-.timeline-dot{position:absolute;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--bg-primary);z-index:2;transition:all .3s}
-.timeline-item:hover .timeline-dot{transform:translateX(-50%) scale(1.3);box-shadow:0 0 0 6px var(--accent-bg)}
-.timeline-year{display:inline-block;font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--accent);background:var(--accent-bg);padding:4px 12px;border-radius:6px;margin-bottom:12px}
-.timeline-content h4{margin-bottom:8px;font-size:1.1rem}
-.timeline-content p{color:var(--text-secondary);font-size:.9rem}
-.timeline-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.timeline-tools span{font-size:.75rem;padding:3px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-secondary);font-weight:500}
+/* ── Editor Evolution Steps ── */
+.evo-editors{display:flex;flex-direction:column;gap:48px}
+.evo-step{max-width:700px;margin:0 auto;width:100%}
+.evo-label{display:flex;align-items:center;gap:12px;margin-bottom:16px;font-size:1.1rem;font-weight:700}
+.evo-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--gradient);color:#fff;font-size:.85rem;font-weight:800;flex-shrink:0}
+.evo-editor{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg-card);transition:box-shadow .3s}
+.evo-editor:hover{box-shadow:var(--shadow-lg)}
+.evo-titlebar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-tertiary);border-bottom:1px solid var(--border)}
+.evo-dot{width:12px;height:12px;border-radius:50%}
+.evo-dot.red{background:#ff5f57}.evo-dot.yellow{background:#febc2e}.evo-dot.green{background:#28c840}
+.evo-title{font-size:.8rem;color:var(--text-tertiary);margin-left:8px;font-family:var(--mono)}
+.evo-code{margin:0;padding:20px;font-family:var(--mono);font-size:.85rem;line-height:1.7;overflow-x:auto;background:transparent}
+.evo-code-sm{font-size:.75rem;padding:12px}
+.evo-desc{color:var(--text-secondary);font-size:.9rem;margin-top:12px;line-height:1.6}
+/* Code colors */
+.c-keyword{color:#c792ea}.c-fn{color:#82aaff}.c-type{color:#ffcb6b}.c-string{color:#c3e88d}
+.c-comment{color:#546e7a;font-style:italic}.c-plain{color:var(--text-secondary)}
+.c-ghost{color:#546e7a;background:rgba(99,102,241,.08);border-radius:4px;padding:1px 0}
+.c-dim{color:#546e7a}.c-prompt{color:var(--emerald);font-weight:700}.c-cmd{color:var(--text-primary)}
+.c-emerald{color:var(--emerald)}.c-amber{color:var(--amber)}
+.c-autocomplete{color:var(--accent);background:var(--accent-bg);display:block;padding:4px 8px;border-radius:6px;border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);margin-top:4px}
+/* Multi-file editor */
+.evo-editor-multi .evo-multi-files{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.evo-file{background:var(--bg-card)}
+.evo-filename{font-family:var(--mono);font-size:.7rem;color:var(--text-tertiary);padding:6px 12px;background:var(--bg-tertiary);border-bottom:1px solid var(--border)}
+/* Terminal editor */
+.evo-editor-terminal .evo-code{background:rgba(0,0,0,.15)}
 @media(max-width:900px){
-  .timeline::before{left:20px}
-  .timeline-item,.timeline-item:nth-child(odd){flex-direction:row}
-  .timeline-content{width:calc(100% - 52px);margin-left:52px}
-  .timeline-dot{left:20px}
+  .evo-editor-multi .evo-multi-files{grid-template-columns:1fr}
+  .evo-code{font-size:.75rem}
 }
 /* ═══════════════════════ ACCELERATION CHART ═══════════════════════ */
 .accel-chart{display:flex;align-items:flex-end;gap:8px;height:280px;padding:20px 0;justify-content:center}
@@ -494,110 +506,163 @@ footer a{color:var(--accent)}
     <div class="section-header">
       <span class="section-label">Bereich 1</span>
       <h2>Die Evolution der <span class="gradient-text">Entwicklungsunterstützung</span></h2>
-      <p>Von Lochkarten und Texteditoren bis zu autonomen KI-Agenten &ndash; ein Weg, der sich exponentiell beschleunigt.</p>
+      <p>Vom blinkenden Cursor ohne jede Hilfe bis zur KI, die eigenständig plant, codet und testet &ndash; so hat sich unsere Entwicklungsunterstützung verändert.</p>
     </div>
 
-    <!-- Timeline -->
-    <div class="timeline">
+    <!-- Editor Evolution -->
+    <div class="evo-editors">
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">1969 &ndash; 1983</span>
-          <h4>Die Geburt des Texteditors</h4>
-          <p>Ken Thompson schreibt <strong>ed</strong> auf einer PDP-7 &ndash; den ersten Unix-Editor. Man konnte die Datei nicht sehen, nur zeilenweise Befehle geben. 1976 fügt Bill Joy mit <strong>vi</strong> einen visuellen Modus hinzu. GNU <strong>Emacs</strong> bringt die Idee eines erweiterbaren Editors &ndash; im Grunde eine Lisp-Laufzeitumgebung mit angehängtem Editor.</p>
-          <div class="timeline-tools"><span>ed</span><span>vi</span><span>Emacs</span><span>Lochkarten</span></div>
+      <!-- 1. Einfacher Texteditor -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">1</span>Einfacher Texteditor</div>
+        <div class="evo-editor">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">vi &ndash; users.txt</span></div>
+          <pre class="evo-code"><span class="c-keyword">~</span>
+<span class="c-keyword">~</span>
+<span class="c-plain">function getUser(id) {</span>
+<span class="c-plain">  var result = db.query("SELECT * FROM users WHERE id=" + id);</span>
+<span class="c-plain">  return result;</span>
+<span class="c-plain">}</span>
+<span class="c-keyword">~</span>
+<span class="c-keyword">~</span>
+<span class="c-dim">-- INSERT -- line 3, col 1</span></pre>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Kein Syntax-Highlighting, keine Hilfe. Jedes Zeichen muss man selbst tippen. Wer einen Fehler macht, merkt es erst beim Kompilieren.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">1983 &ndash; 1996</span>
-          <h4>Die ersten IDEs</h4>
-          <p><strong>Turbo Pascal</strong> von Borland vereint erstmals Editor, Compiler und Linker in einem Programm &ndash; für sensationelle 49,99$. Der Edit-Compile-Run-Zyklus schrumpft von Minuten auf Sekunden. <strong>IntelliSense</strong> (1996) in Visual Basic 5.0 schlägt erstmals Methodennamen und Parameter vor, während man tippt.</p>
-          <div class="timeline-tools"><span>Turbo Pascal</span><span>Visual Basic</span><span>IntelliSense</span><span>Visual Studio 97</span></div>
+      <!-- 2. IDE mit Hilfsfunktionen -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">2</span>IDE mit Hilfsfunktionen</div>
+        <div class="evo-editor">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">IDE &ndash; userService.js</span></div>
+          <pre class="evo-code"><span class="c-keyword">function</span> <span class="c-fn">getUser</span>(id) {
+  <span class="c-keyword">var</span> result = db.<span class="c-fn">query</span>(
+    <span class="c-string">"SELECT * FROM users WHERE id="</span> + id
+  );
+  <span class="c-keyword">return</span> result;
+}</pre>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Syntax-Highlighting! Mehrere Zeilen gleichzeitig editieren, Code-Vergleiche, integrierter Compiler. Fehler werden sofort angezeigt.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">2001 &ndash; 2010</span>
-          <h4>Intelligente IDEs verstehen den Code</h4>
-          <p><strong>IntelliJ IDEA</strong> und <strong>Eclipse</strong> bringen Refactoring, das alle Referenzen verfolgt, Dead-Code-Erkennung und semantische Navigation. Die IDE versteht erstmals die <em>Bedeutung</em> des Codes &ndash; nicht nur dessen Syntax. Man kann sicher umbenennen, Abhängigkeiten verfolgen und Fehler vor dem Kompilieren finden.</p>
-          <div class="timeline-tools"><span>IntelliJ IDEA</span><span>Eclipse</span><span>Visual Studio .NET</span><span>NetBeans</span></div>
+      <!-- 3. Starke IDE mit Sprachverständnis -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">3</span>Starke IDE mit Sprachverständnis</div>
+        <div class="evo-editor">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">WebStorm &ndash; userService.js</span></div>
+          <pre class="evo-code"><span class="c-keyword">function</span> <span class="c-fn">getUser</span>(id) {
+  <span class="c-keyword">return</span> userRepository.<span class="c-fn">findBy</span>
+<span class="c-autocomplete">    &#9654; findById(id): User
+    findByName(name): User[]
+    findAll(): User[]
+    count(): number</span>
+}</pre>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Autovervollständigung kennt alle Methoden und Typen. Verlinkung zu Funktionsdefinitionen, Refactoring über alle Dateien, Fehler vor dem Kompilieren.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">2015 &ndash; 2017</span>
-          <h4>VS Code demokratisiert alles</h4>
-          <p><strong>Visual Studio Code</strong> kombiniert die Leichtgewichtigkeit eines Editors mit IDE-Features. Das <strong>Language Server Protocol (LSP)</strong> entkoppelt Code-Intelligenz vom Editor &ndash; jeder Editor kann jetzt jede Sprache. <strong>IntelliCode</strong> (2017) nutzt erstmals Machine Learning für Vervollständigung.</p>
-          <div class="timeline-tools"><span>VS Code</span><span>LSP</span><span>IntelliCode</span><span>Sublime Text</span><span>Atom</span></div>
+      <!-- 4. Rudimentäre KI: Zeilenvorschläge -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">4</span>Rudimentäre KI: Zeilenvorschläge</div>
+        <div class="evo-editor">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">VS Code + TabNine &ndash; userService.ts</span></div>
+          <pre class="evo-code"><span class="c-keyword">function</span> <span class="c-fn">getUser</span>(id: <span class="c-type">number</span>): <span class="c-type">User</span> {
+  <span class="c-keyword">return</span> userRepository.findBy<span class="c-ghost">Id(id);</span>
+}
+
+<span class="c-keyword">function</span> <span class="c-fn">deleteUser</span>(id: <span class="c-type">number</span>): <span class="c-type">void</span> {
+  <span class="c-ghost">userRepository.delete(id);</span>
+}</pre>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Die KI schlägt den Rest der Zeile vor &ndash; basierend auf statistischer Wahrscheinlichkeit. Fühlt sich an wie Magie, ist aber noch limitiert.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">2018 &ndash; 2020</span>
-          <h4>ML-basierte Code-Vervollständigung</h4>
-          <p><strong>TabNine</strong> nutzt GPT-2, um erstmals mehrzeilige Vorschläge zu generieren &ndash; trainiert auf 2 Millionen GitHub-Dateien. Es fühlt sich an wie Magie: Die KI schlägt ganze Ausdrücke vor, nicht nur Token. <strong>Kite</strong> unterstützt 500.000 Entwickler, scheitert aber an der Monetarisierung &ndash; &bdquo;10 Jahre zu früh am Markt&ldquo;.</p>
-          <div class="timeline-tools"><span>TabNine / GPT-2</span><span>Kite</span><span>GPT-3</span></div>
+      <!-- 5. Quellcode-Verständnis -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">5</span>Quellcode-Verständnis</div>
+        <div class="evo-editor">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">VS Code + Copilot &ndash; userService.ts</span></div>
+          <pre class="evo-code"><span class="c-comment">// Finde User mit Validierung und Error-Handling</span>
+<span class="c-ghost"><span class="c-keyword">async function</span> <span class="c-fn">getUser</span>(id: <span class="c-type">string</span>): <span class="c-type">Promise&lt;User&gt;</span> {
+  <span class="c-keyword">if</span> (!id) <span class="c-keyword">throw new</span> BadRequestError(<span class="c-string">'ID required'</span>);
+  <span class="c-keyword">const</span> user = <span class="c-keyword">await</span> userRepository.findById(id);
+  <span class="c-keyword">if</span> (!user) <span class="c-keyword">throw new</span> NotFoundError(<span class="c-string">`User ${id} not found`</span>);
+  <span class="c-keyword">return</span> user;
+}</span></pre>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Ein Kommentar reicht &ndash; die KI generiert ganze Funktionen mit Validierung, Error-Handling und passenden Typen. Sie versteht den Kontext der Datei.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">Juni 2021</span>
-          <h4>GitHub Copilot &ndash; die Revolution</h4>
-          <p>Basierend auf <strong>OpenAI Codex</strong> (trainiert auf 159 GB Python-Code) generiert Copilot ganze Funktionen aus Kommentaren. Der <strong>HumanEval</strong>-Benchmark wird born: Codex erreicht 28,8% &ndash; bescheiden für heute, ein Paradigmenwechsel damals. Das Entwickeln wird vom Schreiben zum Beschreiben.</p>
-          <div class="timeline-tools"><span>GitHub Copilot</span><span>OpenAI Codex</span><span>HumanEval Benchmark</span></div>
+      <!-- 6. Entwickler-Verständnis -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">6</span>Entwickler-Verständnis</div>
+        <div class="evo-editor evo-editor-multi">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">Cursor &ndash; 3 Dateien gleichzeitig</span></div>
+          <div class="evo-multi-files">
+            <div class="evo-file">
+              <div class="evo-filename">user.model.ts</div>
+              <pre class="evo-code evo-code-sm"><span class="c-ghost"><span class="c-keyword">export interface</span> <span class="c-type">User</span> {
+  id: <span class="c-type">string</span>;
+  name: <span class="c-type">string</span>;
+  email: <span class="c-type">string</span>;
+}</span></pre>
+            </div>
+            <div class="evo-file">
+              <div class="evo-filename">user.service.ts</div>
+              <pre class="evo-code evo-code-sm"><span class="c-ghost"><span class="c-keyword">export class</span> <span class="c-type">UserService</span> {
+  <span class="c-keyword">async</span> <span class="c-fn">create</span>(dto: <span class="c-type">CreateUserDto</span>) {
+    <span class="c-keyword">return</span> <span class="c-keyword">this</span>.repo.save(dto);
+  }
+}</span></pre>
+            </div>
+            <div class="evo-file">
+              <div class="evo-filename">user.test.ts</div>
+              <pre class="evo-code evo-code-sm"><span class="c-ghost"><span class="c-fn">describe</span>(<span class="c-string">'UserService'</span>, () =&gt; {
+  <span class="c-fn">it</span>(<span class="c-string">'should create user'</span>, ...
+  <span class="c-fn">it</span>(<span class="c-string">'should validate email'</span>, ...
+});</span></pre>
+            </div>
+          </div>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Die KI versteht das Projekt. Eine Anweisung &ndash; und Model, Service und Tests werden zusammenhängend generiert. Mehrere Dateien, ein Plan.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">Nov 2022</span>
-          <h4>ChatGPT verändert alles</h4>
-          <p><a href="https://en.wikipedia.org/wiki/ChatGPT" target="_blank" class="source-link"><strong>100 Millionen Nutzer in 2 Monaten.</strong></a> Programmieren wird zur Konversation. Fehlermeldung reinkopieren, erklären lassen, iterieren. Parallel landet <strong>AlphaCode</strong> unter den besten 54% bei Competitive-Programming-Wettbewerben. Kite stellt den Betrieb ein &ndash; überrollt von der Welle.</p>
-          <div class="timeline-tools"><span>ChatGPT</span><span>AlphaCode</span><span>Copilot GA</span></div>
+      <!-- 7. Vollständiger KI-Entwickler -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">7</span>Vollständiger KI-Entwickler</div>
+        <div class="evo-editor evo-editor-terminal">
+          <div class="evo-titlebar"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title">Claude Code &ndash; Terminal</span></div>
+          <pre class="evo-code"><span class="c-prompt">$</span> <span class="c-cmd">claude &quot;Erstelle einen User-CRUD mit Tests&quot;</span>
+
+<span class="c-dim">&#9654; Plan erstellt: 4 Dateien, 3 Tests</span>
+<span class="c-keyword">&#9654; Schreibe</span> user.model.ts
+<span class="c-keyword">&#9654; Schreibe</span> user.service.ts
+<span class="c-keyword">&#9654; Schreibe</span> user.controller.ts
+<span class="c-keyword">&#9654; Schreibe</span> user.spec.ts
+<span class="c-emerald">&#9654; Tests laufen...</span> 3/3 bestanden &#10003;
+<span class="c-amber">&#9654; Lint-Fehler gefunden &ndash; behebe...</span>
+<span class="c-emerald">&#9654; Fertig.</span> 4 Dateien erstellt, alle Tests gr&uuml;n.</pre>
         </div>
-        <div class="timeline-dot"></div>
+        <p class="evo-desc">Aufgabe verstehen &rarr; coden &rarr; testen &rarr; debuggen &rarr; optimieren. Die KI arbeitet in einer Schleife &ndash; wie ein Entwickler. Aber: kleines Kontextfenster = senil nach langen Sessions.</p>
       </div>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">2023</span>
-          <h4>GPT-4, Claude &amp; das Kontextfenster wächst</h4>
-          <p><strong>GPT-4</strong> und <strong>Claude</strong> erscheinen am selben Tag (14. März 2023). Claude 2 bringt ein 100.000-Token-Kontextfenster &ndash; ganze Dateien und kleine Projekte auf einmal verarbeiten. <strong>Cursor IDE</strong> integriert KI direkt in den Editor. <strong>Aider</strong> beweist, dass Terminal-basierte KI-Programmierung mächtig ist.</p>
-          <div class="timeline-tools"><span>GPT-4</span><span>Claude</span><span>Cursor IDE</span><span>Aider</span><span>Copilot Chat</span></div>
-        </div>
-        <div class="timeline-dot"></div>
-      </div>
+      <!-- 8. Senior-KI-Entwickler -->
+      <div class="evo-step reveal">
+        <div class="evo-label"><span class="evo-num">8</span>Senior-KI-Entwickler</div>
+        <div class="evo-editor evo-editor-terminal" style="border-color:var(--accent);border-width:2px">
+          <div class="evo-titlebar" style="background:var(--gradient)"><span class="evo-dot red"></span><span class="evo-dot yellow"></span><span class="evo-dot green"></span><span class="evo-title" style="color:#fff">Claude Code 2.0 &ndash; Agent Teams</span></div>
+          <pre class="evo-code"><span class="c-prompt">$</span> <span class="c-cmd">claude &quot;Implementiere das komplette Ticket LT-428&quot;</span>
 
-      <div class="timeline-item reveal">
-        <div class="timeline-content">
-          <span class="timeline-year">2024</span>
-          <h4>KI-Agenten: Vom Vorschlag zur Umsetzung</h4>
-          <p><strong>Devin</strong> wird als &bdquo;erster KI-Software-Entwickler&ldquo; angekündigt. <strong>Claude Code</strong> entsteht als Nebenprojekt von Boris Cherny und wird zum Werkzeug, das Google-Ingenieure bevorzugen. Die KI schreibt nicht mehr nur Code &ndash; sie plant, implementiert, testet und iteriert. Auf <strong>HumanEval</strong> erreicht GPT o1: <a href="https://www.datacamp.com/tutorial/humaneval-benchmark-for-evaluating-llm-code-generation-capabilities" target="_blank" class="source-link"><strong>96,3%</strong></a> (vs. 28,8% bei Codex 2021).</p>
-          <div class="timeline-tools"><span>Devin</span><span>Claude Code</span><span>Claude 3.5 Sonnet</span><span>Cline</span><span>GPT o1</span></div>
+<span class="c-dim">&#9654; Memory geladen: Projektstruktur, Konventionen, letzte Session</span>
+<span class="c-dim">&#9654; Ticket analysiert: User-Rollen mit RBAC</span>
+<span class="c-keyword">&#9654; Agent 1:</span> Backend &ndash; Model, Service, Guards
+<span class="c-keyword">&#9654; Agent 2:</span> Frontend &ndash; Pages, Composables, Forms
+<span class="c-keyword">&#9654; Agent 3:</span> Tests &ndash; E2E + API-Tests
+<span class="c-emerald">&#9654; Review-Agent pr&uuml;ft Code-Qualit&auml;t...</span> &#10003;
+<span class="c-emerald">&#9654; 12 Dateien, 28 Tests, alle gr&uuml;n.</span>
+<span class="c-dim">&#9654; Session: 45 Min. | Memory gespeichert.</span></pre>
         </div>
-        <div class="timeline-dot"></div>
-      </div>
-
-      <div class="timeline-item reveal">
-        <div class="timeline-content" style="border-color:var(--accent);border-width:2px">
-          <span class="timeline-year" style="background:var(--gradient);color:#fff">2025 &ndash; 2026</span>
-          <h4>Multi-Agenten &amp; Senior-KI-Entwickler</h4>
-          <p><strong>Innerhalb von 2 Wochen</strong> (Februar 2026) launchen Grok Build (8 Agenten), Windsurf (5 parallele Agenten), Claude Code Agent Teams und Codex CLI gleichzeitig Multi-Agenten-Systeme. KI-Entwickler haben jetzt <strong>Memory</strong>, bearbeiten ganze Projekte, führen lange Sessions durch und arbeiten in Teams zusammen. Claude Opus 4.6 führt <a href="https://llm-stats.com/benchmarks/swe-bench-verified" target="_blank" class="source-link">SWE-bench mit <strong>79,2%</strong></a> an.</p>
-          <div class="timeline-tools"><span>Claude Code 2.0</span><span>Claude Opus 4.6</span><span>Agent Teams</span><span>GPT-5 Codex</span><span>Memory</span></div>
-        </div>
-        <div class="timeline-dot" style="background:var(--cyan);width:20px;height:20px"></div>
+        <p class="evo-desc">Großes Kontextfenster, Memory über Sessions hinweg, mehrere Agents parallel. Plant wie ein Senior, kennt das Projekt, arbeitet stundenlang &ndash; und merkt sich alles.</p>
       </div>
 
     </div>
@@ -606,17 +671,17 @@ footer a{color:var(--accent)}
     <div class="reveal" style="margin-top:80px">
       <div class="section-header">
         <h3>Die <span class="gradient-text">Beschleunigung</span></h3>
-        <p>Jahre zwischen den großen Sprüngen &ndash; die Abstände werden immer kürzer</p>
+        <p>Jahre zwischen den Sprüngen in der Entwicklungsunterstützung &ndash; die Abstände werden immer kürzer</p>
       </div>
       <div class="accel-chart" id="accelChart">
-        <div class="accel-bar"><div class="bar bg-indigo" style="height:240px"><span>14 J</span></div><div class="years">1969-83</div><div class="desc">Editor &rarr; IDE</div></div>
-        <div class="accel-bar"><div class="bar bg-indigo" style="height:220px"><span>13 J</span></div><div class="years">1983-96</div><div class="desc">IDE &rarr; IntelliSense</div></div>
-        <div class="accel-bar"><div class="bar bg-violet" style="height:180px"><span>19 J</span></div><div class="years">1996-15</div><div class="desc">IntelliSense &rarr; VS Code</div></div>
-        <div class="accel-bar"><div class="bar bg-violet" style="height:60px"><span>3 J</span></div><div class="years">2015-18</div><div class="desc">VS Code &rarr; ML</div></div>
-        <div class="accel-bar"><div class="bar bg-cyan" style="height:60px"><span>3 J</span></div><div class="years">2018-21</div><div class="desc">ML &rarr; Copilot</div></div>
-        <div class="accel-bar"><div class="bar bg-cyan" style="height:24px"><span>1 J</span></div><div class="years">2021-22</div><div class="desc">Copilot &rarr; ChatGPT</div></div>
-        <div class="accel-bar"><div class="bar bg-emerald" style="height:40px"><span>2 J</span></div><div class="years">2022-24</div><div class="desc">ChatGPT &rarr; Agenten</div></div>
-        <div class="accel-bar"><div class="bar bg-emerald" style="height:24px"><span>1 J</span></div><div class="years">2024-25</div><div class="desc">Agent &rarr; Multi-Agent</div></div>
+        <div class="accel-bar"><div class="bar bg-indigo" style="height:240px"><span>~20 J</span></div><div class="years">1970-90</div><div class="desc">Texteditor &rarr; Syntax-Highlighting</div></div>
+        <div class="accel-bar"><div class="bar bg-indigo" style="height:180px"><span>~15 J</span></div><div class="years">1990-05</div><div class="desc">Highlighting &rarr; Autovervollständigung</div></div>
+        <div class="accel-bar"><div class="bar bg-violet" style="height:120px"><span>~10 J</span></div><div class="years">2005-15</div><div class="desc">Autocomplete &rarr; Refactoring</div></div>
+        <div class="accel-bar"><div class="bar bg-violet" style="height:60px"><span>3 J</span></div><div class="years">2015-18</div><div class="desc">Refactoring &rarr; KI-Zeilenvorschläge</div></div>
+        <div class="accel-bar"><div class="bar bg-cyan" style="height:60px"><span>3 J</span></div><div class="years">2018-21</div><div class="desc">Zeilen &rarr; Funktionen</div></div>
+        <div class="accel-bar"><div class="bar bg-cyan" style="height:24px"><span>1 J</span></div><div class="years">2021-22</div><div class="desc">Funktionen &rarr; Dateien</div></div>
+        <div class="accel-bar"><div class="bar bg-emerald" style="height:40px"><span>2 J</span></div><div class="years">2022-24</div><div class="desc">Dateien &rarr; Projekte</div></div>
+        <div class="accel-bar"><div class="bar bg-emerald" style="height:24px"><span>1 J</span></div><div class="years">2024-25</div><div class="desc">Projekte &rarr; Agent Teams</div></div>
       </div>
     </div>
 
