@@ -26,6 +26,7 @@ let totalVoters = 0;
 const voterIds = new Set();
 
 // Pizza survey storage
+const pizzaAnzahlVotes = [];
 const pizzaVotes = {
   anzahl: 0,
   sorten: {
@@ -57,6 +58,7 @@ app.get('/api/pizza/results', (_req, res) => {
 
 app.post('/api/pizza/reset', (_req, res) => {
   pizzaVotes.anzahl = 0;
+  pizzaAnzahlVotes.length = 0;
   Object.keys(pizzaVotes.sorten).forEach(k => pizzaVotes.sorten[k] = 0);
   pizzaVoters = 0;
   pizzaVoterIds.clear();
@@ -108,7 +110,10 @@ io.on('connection', (socket) => {
     }
     pizzaVoterIds.add(voterId);
     pizzaVoters++;
-    if (anzahl && Number(anzahl) > 0) pizzaVotes.anzahl += Number(anzahl);
+    if (anzahl && Number(anzahl) > 0) {
+      pizzaAnzahlVotes.push(Number(anzahl));
+      pizzaVotes.anzahl = Math.round(pizzaAnzahlVotes.reduce((a, b) => a + b, 0) / pizzaAnzahlVotes.length);
+    }
     if (Array.isArray(sorten)) {
       sorten.forEach(s => { if (pizzaVotes.sorten[s] !== undefined) pizzaVotes.sorten[s]++; });
     }
