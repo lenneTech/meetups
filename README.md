@@ -17,4 +17,4 @@ Du willst kein Meetup mehr verpassen? Melde dich bei unserem Newsletter an:
 
 ## Kontakt
 
-**lenne.Tech GmbH** - [lenne.tech](https://lenne.tech)
+**lenne.Tech GmbH** - [lenne.tech](https://lenne.tech) - [Impressum](https://lenne.tech/impressum) - [Datenschutz](https://lenne.tech/datenschutz)
