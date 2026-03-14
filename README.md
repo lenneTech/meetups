@@ -6,9 +6,9 @@ Jedes Meetup hat einen eigenen Ordner unter `meetups/` mit Präsentation, ggf. S
 
 ## Meetups
 
-| Datum | Thema | Ordner |
-|---|---|---|
-| 13.03.2026 | KI-Unterstützung in der Softwareentwicklung | [meetups/2026-03-13-ki-unterstuetzung-softwareentwicklung](meetups/2026-03-13-ki-unterstuetzung-softwareentwicklung) |
+| Datum | Thema | Ordner | Präsentation |
+|---|---|---|---|
+| 13.03.2026 | KI-Unterstützung in der Softwareentwicklung | [Dateien](meetups/2026-03-13-ki-unterstuetzung-softwareentwicklung) | [Anschauen](https://lennetech.github.io/meetups/meetups/2026-03-13-ki-unterstuetzung-softwareentwicklung/) |
 
 ## Mitmachen
 
